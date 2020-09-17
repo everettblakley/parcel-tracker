@@ -1,48 +1,49 @@
 <script>
-  import { onMount } from "svelte";
-  export let date;
+  import { Map } from "@beyonk/svelte-mapbox";
+  export let accessToken =
+    "pk.eyJ1IjoiZXZlcmV0dGJsYWtsZXkiLCJhIjoiY2tmNjVzcGh6MDJsbzJwbDdja3QwNzJ4dSJ9.nq8Ad46ZaLw8z0JBm0JBlQ";
 
-  onMount(async () => {
-    const res = await fetch("/api/date");
-    const newDate = await res.text();
-    date = newDate;
-  });
+  let mapComponent;
+  let trackingNumber = "";
+  let result;
 </script>
 
-<main>
-  <h1>Svelte + Node.js API</h1>
-  <h2>
-    Deployed with
-    <a href="https://vercel.com/docs" target="_blank" rel="noreferrer noopener">
-      Vercel
-    </a>
-    !
-  </h2>
-  <p>
-    <a
-      href="https://github.com/vercel/vercel/tree/master/examples/svelte"
-      target="_blank"
-      rel="noreferrer noopener">
-      This project
-    </a>
-    is a
-    <a href="https://svelte.dev/">Svelte</a>
-    app with three directories,
-    <code>/public</code>
-    for static assets,
-    <code>/src</code>
-    for components and content, and
-    <code>/api</code>
-    which contains a serverless
-    <a href="https://nodejs.org/en/">Node.js</a>
-    function. See
-    <a href="/api/date">
-      <code>api/date</code>
-      for the Date API with Node.js
-    </a>
-    .
-  </p>
-  <br />
-  <h2>The date according to Node.js is:</h2>
-  <p>{date ? date : 'Loading date...'}</p>
-</main>
+<style>
+  :global(.mapboxgl-map) {
+    height: 100%;
+  }
+
+  .tracking-number-input {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-self: center;
+    text-align:center;
+    transform: translate(-50%, -50%);
+  }
+
+  input {
+    border-radius: 5px;
+    padding: 16px;
+    font-size: 18px;
+  }
+
+  label {
+    font-size: 18px;
+  }
+</style>
+
+{#if !result}
+  <main class="tracking-number-input">
+    <label for="tracking-number">Tracking Number</label>
+    <input type="text" id="tracking-number" value={trackingNumber}/>
+  </main>
+{/if}
+
+<Map
+  {accessToken}
+  bind:this={mapComponent}
+  on:recenter={(e) => console.log(e.detail.center.lat, e.detail.center.lng)} />
