@@ -18,7 +18,7 @@
   let loading = false;
   function getData() {
     loading = true;
-    fetch("/api/parcels/" + trackingNumber)
+    fetch("/api/parcels?trackingNumber=" + trackingNumber)
       .then(async (data) => {
         try {
           const text = await data.json();

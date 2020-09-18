@@ -4,7 +4,8 @@ module.exports = (request, response) => {
 
   console.log(request);
 
-  fetch("https://package.place/api/track/")
-    .then((data) => response.status(200).send(data))
-    .catch((error) => response.status(500).send(error));
+  // fetch("https://package.place/api/track/")
+  //   .then((data) => response.status(200).send(data))
+  //   .catch((error) => response.status(500).send(error));
+  response.status(200).send({ "data": undefined });
 };
