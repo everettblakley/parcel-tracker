@@ -29,6 +29,12 @@
   function handleChange(e) {
     console.log(e.target.value)
   }
+
+  onMount(async () => {
+    const res = await fetch("/api/parcels");
+    const json = await res.text();
+    console.log(json);
+  });
 </script>
 
 <style>
