@@ -1,10 +1,14 @@
 <script>
+  import { onMount } from "svelte";
+
   import { slide } from "svelte/transition";
+  import ParcelHistory from "./ParcelHistory.svelte";
   let accessToken =
     "pk.eyJ1IjoiZXZlcmV0dGJsYWtsZXkiLCJhIjoiY2tmNjVzcGh6MDJsbzJwbDdja3QwNzJ4dSJ9.nq8Ad46ZaLw8z0JBm0JBlQ";
 
   let trackingNumber = "4010765063638021";
   let result;
+  let error = false;
 
   $: pushToTop = result !== undefined;
 
@@ -15,23 +19,124 @@
     collapsed = !collapsed;
   }
 
+  onMount(() => getData());
+
+  function doAPICall() {
+    return new Promise((resolve, _) =>
+      resolve({
+        status: 200,
+        json: () => ({
+          CANADA_POST: [
+            {
+              timestamp: "2020-09-14T19:25:43-06:00",
+              status: "Electronic information submitted by shipper",
+              location: {
+                city: "",
+                state: "",
+                postalCode: "",
+              },
+            },
+            {
+              timestamp: "2020-09-14T19:41:54-06:00",
+              status: "Item processed",
+              location: {
+                city: "CALGARY",
+                state: "AB",
+                country: "Canada",
+                postalCode: "",
+              },
+            },
+            {
+              timestamp: "2020-09-14T22:01:08-06:00",
+              status: "Item in transit",
+              location: {
+                city: "CALGARY",
+                state: "AB",
+                country: "Canada",
+                postalCode: "",
+              },
+            },
+            {
+              timestamp: "2020-09-15T07:24:58-06:00",
+              status: "Item processed",
+              location: {
+                city: "LETHBRIDGE",
+                state: "AB",
+                country: "Canada",
+                postalCode: "",
+              },
+            },
+            {
+              timestamp: "2020-09-15T10:40:49-06:00",
+              status: "Item out for delivery",
+              location: {
+                city: "LETHBRIDGE",
+                state: "AB",
+                country: "Canada",
+                postalCode: "",
+              },
+            },
+            {
+              timestamp: "2020-09-15T13:59:36-06:00",
+              status:
+                "Notice card left indicating where and when to pick up item",
+              location: {
+                city: "LETHBRIDGE",
+                state: "AB",
+                country: "Canada",
+                postalCode: "",
+              },
+            },
+            {
+              timestamp: "2020-09-15T19:23:39-06:00",
+              status: "Item available for pickup at Post Office",
+              location: {
+                city: "LETHBRIDGE",
+                state: "AB",
+                country: "Canada",
+                postalCode: "",
+              },
+            },
+            {
+              timestamp: "2020-09-17T11:36:57-06:00",
+              status: "Delivered",
+              location: {
+                city: "LETHBRIDGE",
+                state: "AB",
+                country: "Canada",
+                postalCode: "",
+              },
+            },
+          ],
+        }),
+      })
+    );
+    // fetch("https://package.place/api/track/" + trackingNumber)
+  }
+
   let loading = false;
   function getData() {
+    error = false;
     loading = true;
-    fetch("/api/parcels?trackingNumber=" + trackingNumber)
-      .then(async (data) => {
+    doAPICall()
+      .then(async (res) => {
+        if (res.status !== 200) {
+          error = true;
+          return;
+        }
+
         try {
-          const text = await data.json();
-          console.log(text);
+          const data = await res.json();
+          result = data;
+          collapsed = false;
+          console.log(result);
         } catch (e) {
+          error = true;
           console.error(e);
         }
       })
+      .catch(() => (error = true))
       .finally(() => (loading = false));
-  }
-
-  function handleChange(e) {
-    console.log(e.target.value);
   }
 </script>
 
@@ -44,13 +149,7 @@
 
   main {
     position: relative;
-    background: lightcyan;
     border-bottom: 2px #1a1a1a solid;
-  }
-
-  .locations {
-    padding: 2rem;
-    background: lightcoral;
   }
 
   .tracking-number-input {
@@ -60,6 +159,9 @@
     z-index: 100;
     transition: all 200ms ease-in-out;
     transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .tracking-number-input form {
@@ -67,6 +169,7 @@
     flex-direction: column;
     justify-content: center;
     text-align: center;
+    width: max-content;
   }
 
   .tracking-number-input.top {
@@ -87,12 +190,25 @@
     padding: 12px;
     border-radius: 5px;
     border: 1px rgb(50, 50, 50) solid;
+    width: auto;
   }
   label {
     font-size: 24px;
     color: black;
     font-weight: 900;
     margin-bottom: 4px;
+  }
+
+  .error {
+    color: var(--red);
+  }
+
+  p.error {
+    margin: 4px 0;
+  }
+
+  input.error {
+    border-color: var(--red);
   }
 
   img {
@@ -150,6 +266,10 @@
     visibility: visible;
     background: rgba(0, 0, 0, 0.5);
   }
+
+  .locations {
+    overflow: hidden;
+  }
 </style>
 
 <div class="loading {loading ? 'active' : ''}">
@@ -163,10 +283,15 @@
         <label for="tracking-number">Tracking Number</label>
         <input
           type="text"
+          class={error ? 'error' : ''}
           id="tracking-number"
-          value={trackingNumber}
-          on:input={handleChange} />
+          bind:value={trackingNumber} />
       </form>
+      {#if error}
+        <p class="error" transition:slide>
+          Hmm.. Something went wrong.. Is that the right tracking number?
+        </p>
+      {/if}
     </div>
 
     <!-- <img
@@ -182,7 +307,7 @@
 
   {#if !collapsed}
     <section class="locations" transition:slide>
-      <p>Some stuff here later</p>
+      <ParcelHistory data={result} />
     </section>
   {/if}
 </div>
