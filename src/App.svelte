@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte";
   import { slide } from "svelte/transition";
   let accessToken =
     "pk.eyJ1IjoiZXZlcmV0dGJsYWtsZXkiLCJhIjoiY2tmNjVzcGh6MDJsbzJwbDdja3QwNzJ4dSJ9.nq8Ad46ZaLw8z0JBm0JBlQ";
@@ -19,22 +18,21 @@
   let loading = false;
   function getData() {
     loading = true;
-    setTimeout(() => {
-      loading = false;
-      collapsed = false;
-      result = "something";
-    }, 500);
+    fetch("/api/parcels/" + trackingNumber)
+      .then(async (data) => {
+        try {
+          const text = await data.json();
+          console.log(text);
+        } catch (e) {
+          console.error(e);
+        }
+      })
+      .finally(() => (loading = false));
   }
 
   function handleChange(e) {
-    console.log(e.target.value)
+    console.log(e.target.value);
   }
-
-  onMount(async () => {
-    const res = await fetch("/api/parcels");
-    const json = await res.text();
-    console.log(json);
-  });
 </script>
 
 <style>
@@ -70,7 +68,7 @@
     justify-content: center;
     text-align: center;
   }
-  
+
   .tracking-number-input.top {
     top: 18px;
     transform: translate(-50%);
@@ -83,7 +81,7 @@
   .tracking-number-input.top form label {
     font-size: 18px;
   }
-  
+
   input {
     font-size: 24px;
     padding: 12px;
