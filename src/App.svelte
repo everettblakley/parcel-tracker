@@ -9,7 +9,8 @@
 
   let trackingNumber; // = "4010765063638021";
   let data;
-  let error = false;
+  let errorMessage = "";
+  $:error = errorMessage !== "";
   let main;
 
   $: pushToTop = data !== undefined;
@@ -30,108 +31,27 @@
   });
 
   function doAPICall() {
-    return new Promise((resolve) =>
-      resolve({
-        status: 200,
-        json: () => ({
-          CANADA_POST: [
-            {
-              timestamp: "2020-09-14T19:25:43-06:00",
-              status: "Electronic information submitted by shipper",
-              location: {
-                city: "",
-                state: "",
-                postalCode: "",
-              },
-            },
-            {
-              timestamp: "2020-09-14T19:41:54-06:00",
-              status: "Item processed",
-              location: {
-                city: "CALGARY",
-                state: "AB",
-                country: "Canada",
-                postalCode: "",
-              },
-            },
-            {
-              timestamp: "2020-09-14T22:01:08-06:00",
-              status: "Item in transit",
-              location: {
-                city: "CALGARY",
-                state: "AB",
-                country: "Canada",
-                postalCode: "",
-              },
-            },
-            {
-              timestamp: "2020-09-15T07:24:58-06:00",
-              status: "Item processed",
-              location: {
-                city: "LETHBRIDGE",
-                state: "AB",
-                country: "Canada",
-                postalCode: "",
-              },
-            },
-            {
-              timestamp: "2020-09-15T10:40:49-06:00",
-              status: "Item out for delivery",
-              location: {
-                city: "LETHBRIDGE",
-                state: "AB",
-                country: "Canada",
-                postalCode: "",
-              },
-            },
-            {
-              timestamp: "2020-09-15T13:59:36-06:00",
-              status:
-                "Notice card left indicating where and when to pick up item",
-              location: {
-                city: "LETHBRIDGE",
-                state: "AB",
-                country: "Canada",
-                postalCode: "",
-              },
-            },
-            {
-              timestamp: "2020-09-15T19:23:39-06:00",
-              status: "Item available for pickup at Post Office",
-              location: {
-                city: "LETHBRIDGE",
-                state: "AB",
-                country: "Canada",
-                postalCode: "",
-              },
-            },
-            {
-              timestamp: "2020-09-17T11:36:57-06:00",
-              status: "Delivered",
-              location: {
-                city: "LETHBRIDGE",
-                state: "AB",
-                country: "Canada",
-                postalCode: "",
-              },
-            },
-          ],
-        }),
-      })
-    );
-    // fetch("https://package.place/api/track/" + trackingNumber)
+    return fetch("https://package.place/api/track/" + trackingNumber);
   }
 
   function getData() {
-    error = false;
+    if (!trackingNumber) {
+      errorMessage = "Please enter a tracking number!";
+      return;
+    }
+    errorMessage = "";
     loading.update(() => true);
+    parcelData.update(() => undefined);
     doAPICall()
       .then(async (res) => {
         if (res.status !== 200) {
-          error = true;
+          if (res.status === 404) {
+            errorMessage = "Couldn't find tracking details for this tracking number. Please ensure it is from one of the supported carriers, listed below";
+            return;
+          }
+          errorMessage = "Hmm.. Something went wrong.. Please try a different tracking number";
           return;
         }
-
         try {
           let responseData = await res.json();
           await initializeData(responseData);
@@ -139,11 +59,11 @@
           parcelData.update(() => data);
           collapsed = false;
         } catch (e) {
-          error = true;
+          errorMessage = "Hmm.. Something went wrong processing the tracking data.. Please try again";
           console.error(e);
         }
       })
-      .catch(() => (error = true))
+      .catch(() => (errorMessage = "Hmm.. Something went wrong.. Please try again later"))
       .finally(() => loading.update(() => false));
   }
 
@@ -310,7 +230,7 @@
       </form>
       {#if error}
         <p class="error" transition:slide>
-          Hmm.. Something went wrong.. Is that the right tracking number?
+          {errorMessage}
         </p>
       {/if}
       {#if !pushToTop}
