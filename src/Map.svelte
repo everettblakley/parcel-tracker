@@ -5,6 +5,7 @@
 
   let mapContainer;
   let map;
+  let markers = [];
 
   onMount(() => {
     map = new mapbox.Map({
@@ -19,13 +20,16 @@
     };
   });
 
-  menuHeight.subscribe((height) => {
+  function recenterMap(args) {
+    const height = args.height || $menuHeight || 0;
     const data = $parcelData;
-    let feature;
+    let { feature } = args;
     if (data) {
-      for (let key of Object.keys(data)) {
-        if (data[key].active) {
-          feature = data[key].find((item) => item.selected) || data[key].bbox;
+      if (!feature) {
+        for (let key of Object.keys(data)) {
+          if (data[key].active) {
+            feature = data[key].find((item) => item.selected) || data[key].bbox;
+          }
         }
       }
 
@@ -33,35 +37,65 @@
         if (feature) {
           if (feature.bbox) {
             let paddingBottom = (height || 0) + 50;
-            console.log(feature);
-            map.fitBounds(feature.bbox, {
-              padding: { top: 150, left: 50, right: 50, bottom: paddingBottom },
-            });
+            try {
+              map.fitBounds(feature.bbox, {
+                padding: {
+                  top: 150,
+                  left: 50,
+                  right: 50,
+                  bottom: paddingBottom,
+                },
+              });
+            } catch (e) {
+              map.fitBounds(feature.bbox);
+            }
           }
         }
       }
     }
+  }
+
+  menuHeight.subscribe((height) => {
+    recenterMap({ height });
   });
 
   const unsubscribe = parcelData.subscribe((data) => {
     loading.update(() => true);
-    if (data && map) {
-      Object.keys(data).forEach((carrier) => {
-        if (data[carrier].active) {
-          const items = data[carrier];
-          for (let item of items) {
-            if (item.feature) {
-              new mapbox.Marker({
-                color: item.selected
-                  ? "var(--dark-blue)"
-                  : "var(--medium-blue)",
-              })
-                .setLngLat(item.feature.center)
-                .addTo(map);
+    if (map) {
+      if (data) {
+        Object.keys(data).forEach((carrier) => {
+          if (data[carrier].active) {
+            const items = data[carrier];
+            for (let item of items) {
+              if (item.feature) {
+                const marker = new mapbox.Marker({
+                  color: item.selected
+                    ? "var(--dark-blue)"
+                    : "var(--medium-blue)",
+                })
+                  .setLngLat(item.feature.center)
+                  .addTo(map);
+                markers.push(marker);
+              }
+            }
+            const selectedItem = items.find((item) => item.selected);
+            if (selectedItem) {
+              recenterMap({ feature: selectedItem.feature });
+            } else {
+              recenterMap({ feature: items.bbox });
             }
           }
-        }
-      });
+        });
+      } else {
+        markers.forEach((marker) => {
+          try {
+            marker.remove();
+          } catch (e) {
+            console.log(e);
+          }
+        });
+        markers = [];
+      }
     }
     loading.update(() => false);
   });

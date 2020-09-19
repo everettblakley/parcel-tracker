@@ -176,6 +176,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    background: var(--light);
+    padding: 1rem;
+    border-radius: 8px;
   }
 
   .tracking-number-input form {
@@ -203,12 +206,12 @@
     font-size: 24px;
     padding: 12px;
     border-radius: 5px;
-    border: 1px rgb(50, 50, 50) solid;
+    border: 1px var(--dark) solid;
     width: auto;
   }
   label {
     font-size: 24px;
-    color: black;
+    color: var(--dark);
     font-weight: 900;
     margin-bottom: 4px;
   }
@@ -217,8 +220,12 @@
     color: var(--red);
   }
 
-  p.error {
-    margin: 4px 0;
+  p.error, p.help {
+    margin: 8px 0;
+  }
+
+  p.help {
+    font-size: 12px;
   }
 
   input.error {
@@ -305,6 +312,9 @@
         <p class="error" transition:slide>
           Hmm.. Something went wrong.. Is that the right tracking number?
         </p>
+      {/if}
+      {#if !pushToTop}
+        <p class="help" transition:slide>Enter in a tracking number from Canada Post, DHL, FedEx, SkyNet Worldwide, USPS, or UPS, and see the order history plotted on the map!</p>
       {/if}
     </div>
 
