@@ -1,5 +1,6 @@
 <script>
   import moment from "moment";
+  import { onDestroy } from "svelte";
   import { parcelData } from "./stores";
   let data;
 
@@ -19,6 +20,8 @@
   function clear() {
     parcelData.update(() => {});
   }
+
+  onDestroy(unsubscribe);
 </script>
 
 <style>
@@ -145,14 +148,14 @@
             <div class="details">
               {#if item.location}
                 <p class="place-name">
-                  {item.location.city}{item.location.state ? ', ' + item.location.state : ''}
+                  {item.location.city}{item.location.state ? ", " + item.location.state : ""}
                 </p>
               {/if}
               <p class="status">{item.status}</p>
               <p class="date">
-                {moment(item.timestamp).format('dddd, MMMM Do YYYY')}
+                {moment(item.timestamp).format("dddd, MMMM Do YYYY")}
               </p>
-              <p class="time">{moment(item.timestamp).format('h:mm:ss a')}</p>
+              <p class="time">{moment(item.timestamp).format("h:mm:ss a")}</p>
             </div>
           </div>
         {/each}

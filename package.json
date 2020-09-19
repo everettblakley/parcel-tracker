@@ -4,6 +4,8 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^13.0.0",
     "@rollup/plugin-node-resolve": "^8.1.0",
+    "eslint": "^7.9.0",
+    "eslint-plugin-svelte3": "^2.7.3",
     "npm-run-all": "^4.1.5",
     "rollup": "^2.18.0",
     "rollup-plugin-livereload": "^1.0.0",
@@ -13,6 +15,10 @@
   },
   "dependencies": {
     "@mapbox/mapbox-sdk": "^0.11.0",
+    "@turf/bbox": "^6.0.1",
+    "@turf/bbox-polygon": "^6.0.1",
+    "@turf/helpers": "^6.1.4",
+    "@turf/transform-scale": "^5.1.5",
     "mapbox-gl": "^1.12.0",
     "moment": "^2.28.0",
     "sirv-cli": "^1.0.1"

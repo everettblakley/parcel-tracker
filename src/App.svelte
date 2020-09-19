@@ -1,34 +1,36 @@
 <script>
   import { slide } from "svelte/transition";
   import { initializeData } from "./utilities";
-  import { parcelData, loading } from "./stores";
+  import { parcelData, loading, menuHeight } from "./stores";
   import Map from "./Map.svelte";
   import ParcelHistory from "./ParcelHistory.svelte";
+  import { onDestroy } from "svelte";
+
 
   let trackingNumber; // = "4010765063638021";
-  let result;
+  let data;
   let error = false;
+  let main;
 
-  $: pushToTop = result !== undefined;
+  $: pushToTop = data !== undefined;
 
   let src = "/images/arrow.svg";
-  let collapsed = true;
+  let collapsed = false;
 
   function collapse() {
     collapsed = !collapsed;
   }
 
   const unsubscribe = parcelData.subscribe((value) => {
-    if (value) {
-    } else {
+    if (!value) {
       trackingNumber = "";
       collapsed = true;
     }
-    result = value;
+    data = value;
   });
 
   function doAPICall() {
-    return new Promise((resolve, _) =>
+    return new Promise((resolve) =>
       resolve({
         status: 200,
         json: () => ({
@@ -131,9 +133,9 @@
         }
 
         try {
-          const dirtyData = await res.json();
-          const data = initializeData(dirtyData);
-          result = data;
+          let responseData = await res.json();
+          await initializeData(responseData);
+          data = responseData;
           parcelData.update(() => data);
           collapsed = false;
         } catch (e) {
@@ -144,6 +146,12 @@
       .catch(() => (error = true))
       .finally(() => loading.update(() => false));
   }
+
+  function collapseChanged(e) {
+    menuHeight.update(() => e.target.clientHeight);
+  }
+
+  onDestroy(unsubscribe);
 </script>
 
 <style>
@@ -283,13 +291,13 @@
 </div>
 
 <div class="container">
-  <main>
+  <main bind:this={main}>
     <div class="tracking-number-input {pushToTop ? 'top' : ''}">
       <form on:submit|preventDefault={getData}>
         <label for="tracking-number">Tracking Number</label>
         <input
           type="text"
-          class={error ? 'error' : ''}
+          class={error ? "error" : ""}
           id="tracking-number"
           bind:value={trackingNumber} />
       </form>
@@ -309,7 +317,11 @@
   </main>
 
   {#if !collapsed}
-    <section class="locations" transition:slide>
+    <section 
+      class="locations" 
+      transition:slide 
+      on:introend={collapseChanged} 
+      on:outroend={collapseChanged}>
       <ParcelHistory />
     </section>
   {/if}
