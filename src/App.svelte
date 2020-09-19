@@ -1,11 +1,11 @@
 <script>
   import { slide } from "svelte/transition";
   import { initializeData } from "./utilities";
-  import {parcelData} from "./stores";
+  import { parcelData, loading } from "./stores";
   import Map from "./Map.svelte";
   import ParcelHistory from "./ParcelHistory.svelte";
 
-  let trackingNumber = "4010765063638021";
+  let trackingNumber; // = "4010765063638021";
   let result;
   let error = false;
 
@@ -18,14 +18,14 @@
     collapsed = !collapsed;
   }
 
-  const unsubscribe = parcelData.subscribe(value => {
+  const unsubscribe = parcelData.subscribe((value) => {
     if (value) {
     } else {
       trackingNumber = "";
       collapsed = true;
     }
     result = value;
-  })
+  });
 
   function doAPICall() {
     return new Promise((resolve, _) =>
@@ -120,10 +120,9 @@
     // fetch("https://package.place/api/track/" + trackingNumber)
   }
 
-  let loading = false;
   function getData() {
     error = false;
-    loading = true;
+    loading.update(() => true);
     doAPICall()
       .then(async (res) => {
         if (res.status !== 200) {
@@ -143,7 +142,7 @@
         }
       })
       .catch(() => (error = true))
-      .finally(() => (loading = false));
+      .finally(() => loading.update(() => false));
   }
 </script>
 
@@ -279,7 +278,7 @@
   }
 </style>
 
-<div class="loading {loading ? 'active' : ''}">
+<div class="loading {$loading ? 'active' : ''}">
   <img class="spinner" src="/images/spinner.svg" alt="loading spinner" />
 </div>
 

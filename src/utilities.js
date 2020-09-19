@@ -25,6 +25,9 @@ export const initializeData = (data) => {
 
       // Give each input a selected value
       data[key][index].selected = false;
+
+      // Give each input an empty object for a feautre
+      data[key][index].feature = undefined;
     });
 
     // Sort the data based on the timestamp
