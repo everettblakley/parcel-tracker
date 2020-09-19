@@ -1,6 +1,6 @@
 <script>
   import { onDestroy, onMount } from "svelte";
-  import { parcelData, loading, menuHeight } from "./stores";
+  import { parcelData, menuHeight } from "./stores";
   import { mapbox } from "./mapbox";
 
   let mapContainer;
@@ -35,6 +35,7 @@
 
       if (map) {
         if (feature) {
+          console.dir(feature);
           if (feature.bbox) {
             let paddingBottom = (height || 0) + 50;
             try {
@@ -60,7 +61,6 @@
   });
 
   const unsubscribe = parcelData.subscribe((data) => {
-    loading.update(() => true);
     if (map) {
       if (data) {
         Object.keys(data).forEach((carrier) => {
@@ -97,7 +97,6 @@
         markers = [];
       }
     }
-    loading.update(() => false);
   });
 
   onDestroy(unsubscribe);

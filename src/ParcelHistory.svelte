@@ -1,12 +1,7 @@
 <script>
   import moment from "moment";
-  import { onDestroy } from "svelte";
   import { parcelData } from "./stores";
-  let data;
 
-  const unsubscribe = parcelData.subscribe((value) => {
-    data = value;
-  });
 
   function selectItem(carrier, index) {
     parcelData.update((oldData) => {
@@ -18,10 +13,9 @@
   }
 
   function clear() {
-    parcelData.update(() => {});
+    console.log("Clearing..");
+    parcelData.set(undefined);
   }
-
-  onDestroy(unsubscribe);
 </script>
 
 <style>
@@ -131,14 +125,14 @@
 </style>
 
 <div class="container">
-  {#if data}
-    {#each Object.keys(data) as carrier}
+  {#if $parcelData}
+    {#each Object.keys($parcelData) as carrier}
       <div class="header">
         <h3>Delivered by: {carrier}</h3>
         <button class="btn" on:click={clear}>Clear</button>
       </div>
       <div class="items">
-        {#each data[carrier] as item, index}
+        {#each $parcelData[carrier] as item, index}
           <div
             class="item {item.selected ? 'selected' : ''}"
             on:click={selectItem(carrier, index)}>

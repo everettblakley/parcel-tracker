@@ -1,7 +1,7 @@
 <script>
   import { slide } from "svelte/transition";
   import { initializeData } from "./utilities";
-  import { parcelData, loading, menuHeight } from "./stores";
+  import { parcelData, menuHeight } from "./stores";
   import Map from "./Map.svelte";
   import ParcelHistory from "./ParcelHistory.svelte";
   import { onDestroy } from "svelte";
@@ -12,6 +12,7 @@
   let errorMessage = "";
   $:error = errorMessage !== "";
   let main;
+  let loading = false;
 
   $: pushToTop = data !== undefined;
 
@@ -23,6 +24,8 @@
   }
 
   const unsubscribe = parcelData.subscribe((value) => {
+    debugger;
+    console.dir(value);
     if (!value) {
       trackingNumber = "";
       collapsed = true;
@@ -40,7 +43,7 @@
       return;
     }
     errorMessage = "";
-    loading.update(() => true);
+    loading = true;
     parcelData.update(() => undefined);
     doAPICall()
       .then(async (res) => {
@@ -56,15 +59,19 @@
           let responseData = await res.json();
           await initializeData(responseData);
           data = responseData;
-          parcelData.update(() => data);
+          parcelData.set(data);
           collapsed = false;
         } catch (e) {
           errorMessage = "Hmm.. Something went wrong processing the tracking data.. Please try again";
           console.error(e);
+        } finally {
+          loading = false;
         }
       })
       .catch(() => (errorMessage = "Hmm.. Something went wrong.. Please try again later"))
-      .finally(() => loading.update(() => false));
+      .finally(() => {
+        loading = false;
+      });
   }
 
   function collapseChanged(e) {
@@ -99,6 +106,7 @@
     background: var(--light);
     padding: 1rem;
     border-radius: 8px;
+    max-width: 400px;
   }
 
   .tracking-number-input form {
@@ -213,7 +221,7 @@
   }
 </style>
 
-<div class="loading {$loading ? 'active' : ''}">
+<div class="loading {loading ? 'active' : ''}">
   <img class="spinner" src="/images/spinner.svg" alt="loading spinner" />
 </div>
 
