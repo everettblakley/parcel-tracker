@@ -1,10 +1,9 @@
 <script>
-  import { onMount } from "svelte";
-
   import { slide } from "svelte/transition";
+  import { initializeData } from "./utilities";
+  import {parcelData} from "./stores";
+  import Map from "./Map.svelte";
   import ParcelHistory from "./ParcelHistory.svelte";
-  let accessToken =
-    "pk.eyJ1IjoiZXZlcmV0dGJsYWtsZXkiLCJhIjoiY2tmNjVzcGh6MDJsbzJwbDdja3QwNzJ4dSJ9.nq8Ad46ZaLw8z0JBm0JBlQ";
 
   let trackingNumber = "4010765063638021";
   let result;
@@ -19,7 +18,14 @@
     collapsed = !collapsed;
   }
 
-  onMount(() => getData());
+  const unsubscribe = parcelData.subscribe(value => {
+    if (value) {
+    } else {
+      trackingNumber = "";
+      collapsed = true;
+    }
+    result = value;
+  })
 
   function doAPICall() {
     return new Promise((resolve, _) =>
@@ -126,10 +132,11 @@
         }
 
         try {
-          const data = await res.json();
+          const dirtyData = await res.json();
+          const data = initializeData(dirtyData);
           result = data;
+          parcelData.update(() => data);
           collapsed = false;
-          console.log(result);
         } catch (e) {
           error = true;
           console.error(e);
@@ -141,7 +148,7 @@
 </script>
 
 <style>
-  .parent {
+  .container {
     height: 100vh;
     display: grid;
     grid-template-rows: 1fr auto;
@@ -276,7 +283,7 @@
   <img class="spinner" src="/images/spinner.svg" alt="loading spinner" />
 </div>
 
-<div class="parent">
+<div class="container">
   <main>
     <div class="tracking-number-input {pushToTop ? 'top' : ''}">
       <form on:submit|preventDefault={getData}>
@@ -294,10 +301,7 @@
       {/if}
     </div>
 
-    <!-- <img
-      class="map-img"
-      src="https://www.nationalgeographic.com/content/dam/ngdotcom/rights-exempt/maps/world-classic-2018-banner-clip-72.adapt.1900.1.jpg"
-      alt="map" /> -->
+    <Map />
     <div
       class="collapse-button btn {collapsed ? 'collapsed' : ''}"
       on:click={collapse}>
@@ -307,7 +311,7 @@
 
   {#if !collapsed}
     <section class="locations" transition:slide>
-      <ParcelHistory data={result} />
+      <ParcelHistory />
     </section>
   {/if}
 </div>

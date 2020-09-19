@@ -1,10 +1,23 @@
 <script>
   import moment from "moment";
-  export let data;
+  import { parcelData } from "./stores";
+  let data;
 
-  function transformCarrierName(name) {
-    console.log(name);
-    return name;
+  const unsubscribe = parcelData.subscribe((value) => {
+    data = value;
+  });
+
+  function selectItem(carrier, index) {
+    parcelData.update((oldData) => {
+      oldData[carrier].forEach((value, i) => {
+        value.selected = i === index ? !value.selected : false;
+      });
+      return oldData;
+    });
+  }
+
+  function clear() {
+    parcelData.update(() => {});
   }
 </script>
 
@@ -14,8 +27,26 @@
     overflow: hidden;
   }
 
-  .container > h3 {
+  .header {
+    display: flex;
+    align-items: center;
     margin: 0 2rem 1rem;
+  }
+
+  button.btn {
+    background: var(--light);
+    border: 1px var(--dark-blue) solid;
+    border-radius: 4px;
+    padding: 8px;
+    margin-left: auto;
+    cursor: pointer;
+    transition: 100ms ease-in-out;
+  }
+
+  button.btn:hover {
+    background: var(--dark-blue);
+    border: 1px var(--dark) solid;
+    color: var(--light);
   }
 
   .items {
@@ -38,12 +69,18 @@
     word-wrap: break-word;
     transition: 300ms ease-in-out;
     color: var(--dark-blue);
+    cursor: pointer;
   }
 
-  div.item:hover {
-    background: var(--light-blue);
+  div.item:hover,
+  div.item.selected {
+    background: var(--light);
   }
 
+  div.item.selected .dot {
+    background: var(--dark-blue);
+    transform: scale(1.5);
+  }
 
   /* div::-webkit-scrollbar {
     width: 1em;
@@ -87,22 +124,21 @@
     background: var(--medium-blue);
     margin: 25px auto;
     transition: 200ms ease-in-out;
-    cursor: pointer;
-  }
-
-  .dot:hover {
-    background: var(--dark-blue);
-    transform: scale(1.5);
   }
 </style>
 
 <div class="container">
   {#if data}
     {#each Object.keys(data) as carrier}
-      <h3>Delivered by: {transformCarrierName(carrier)}</h3>
+      <div class="header">
+        <h3>Delivered by: {carrier}</h3>
+        <button class="btn" on:click={clear}>Clear</button>
+      </div>
       <div class="items">
-        {#each data[carrier] as item}
-          <div class="item">
+        {#each data[carrier] as item, index}
+          <div
+            class="item {item.selected ? 'selected' : ''}"
+            on:click={selectItem(carrier, index)}>
             <div class="timeline-component">
               <div class="dot" />
             </div>
@@ -123,6 +159,11 @@
       </div>
     {/each}
   {:else}
-    <p>Nothing to see here...</p>
+    <div class="header">
+      <p>
+        Enter in a Tracking Number above. If found, the details will show up
+        here
+      </p>
+    </div>
   {/if}
 </div>
