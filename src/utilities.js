@@ -43,6 +43,8 @@ export const getFeatureForLocation = (geocodingClient, location) => {
         response.body.features.length
       ) {
         const feature = response.body.features[0];
+        console.log(feature);
+        console.log(toFeature);
         return feature;
       }
     })
