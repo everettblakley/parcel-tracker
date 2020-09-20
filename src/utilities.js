@@ -1,7 +1,8 @@
 import { mapbox, mapboxSdk, geocoding } from "./mapbox";
 import bbox from "@turf/bbox";
 import bboxPolygon from "@turf/bbox-polygon";
-import { feature as toFeature, featureCollection } from "@turf/helpers";
+import { feature as toFeature, featureCollection, lineString } from "@turf/helpers";
+import deepEqual from "deep-equal";
 
 export const toSentenceCase = (text) => {
   return text.replace(/\w\S*/g, function (text) {
@@ -20,9 +21,16 @@ export const carrierName = (name) => {
 };
 
 export const getFeatureForLocation = (geocodingClient, location) => {
+  let locationName;
+  if (typeof location === "string") {
+    locationName = location;
+  } else {
+    locationName = `${location.city}, ${location.state && location.state + ", "}${location.country}`;
+  }
+
   return geocodingClient
     .forwardGeocode({
-      query: `${location.city}, ${location.state && location.state + ", "}${location.country}`,
+      query: locationName,
       autocomplete: false,
       limit: 1,
     })
@@ -52,10 +60,46 @@ export const getBoundingBoxForLocations = (data) => {
       }
     })
     .filter((i) => i !== undefined);
+
+  if (features.length === 1 && features[0].bbox) {
+    return features[0].bbox;
+  }
   features = featureCollection(features);
   const boundingBox = bbox(features);
   const boundingBoxPolygon = bboxPolygon(boundingBox);
   return boundingBoxPolygon;
+};
+
+export const compareLocations = (loc1, loc2) => {
+  if (typeof loc1 === "string") {
+    if (typeof loc2 === "string") {
+      return loc1 === loc2;
+    }
+    return false;
+  } else {
+    if (typeof loc2 === "string") {
+      return false;
+    }
+    return deepEqual(loc1, loc2);
+  }
+};
+
+export const getLineBetweenPoints = (points) => {
+  const lines = [];
+  for (let index = 0; index < points.length; index++) {
+    const point = points[index];
+    if (point.feature && index + 1 < points.length && points[index + 1].feature) {
+      const nextPoint = points[index + 1];
+      if (!compareLocations(nextPoint.location, point.location)) {
+        const line = lineString([point.feature.center, nextPoint.feature.center]);
+        lines.push({
+          feature: line,
+          selected: false
+        });
+      }
+    }
+  }
+  return lines;
 };
 
 export const initializeData = async (data) => {
@@ -67,17 +111,31 @@ export const initializeData = async (data) => {
     for (let index = 0; index < data[key].length; index++) {
       const value = data[key][index];
 
-      if (value.location && value.location.city) {
-        // Sentence case the city names
-        data[key][index].location.city = toSentenceCase(data[key][index].location.city);
+      if (value.location) {
+        if (value.location.city) {
+          // Sentence case the city names
+          data[key][index].location.city = toSentenceCase(data[key][index].location.city);
 
-        // Get the Mapbox feature for each location
-        data[key][index].feature = await getFeatureForLocation(geocodingClient, value.location);
+          // Get the Mapbox feature for each location
+          data[key][index].feature = await getFeatureForLocation(geocodingClient, value.location);
+        } else if (typeof value.location === "string") {
+          // Sentence case the city names
+          let name = value.location.split(",");
+          name[0] = toSentenceCase(name[0]);
+          data[key][index].location = name.length > 1 ? name.join(", ") : name[0];
+
+          // Get the Mapbox feature for each location
+          data[key][index].feature = await getFeatureForLocation(geocodingClient, value.location);
+        }
       }
 
       // Give each input a selected value
       data[key][index].selected = false;
     }
+
+    // Get all the lines connecting different points
+    const lines = getLineBetweenPoints(data[key]);
+    data[key].push(...lines);
 
     // Set the bounding box for the features
     data[key].bbox = getBoundingBoxForLocations(data[key]);

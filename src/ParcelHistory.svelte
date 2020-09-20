@@ -12,8 +12,21 @@
     });
   }
 
+  function locationName(location) {
+    if (typeof location === "string") {
+      return location;
+    }
+    return `${location.city}${location.state ? ", " + location.state : ""}`;
+  }
+
+  function drawPoint(item) {
+    if (item.feature) {
+      return item.feature.geometry && item.feature.geometry.type === "Point";
+    }
+    return true;
+  }
+
   function clear() {
-    console.log("Clearing..");
     parcelData.set(undefined);
   }
 </script>
@@ -133,25 +146,27 @@
       </div>
       <div class="items">
         {#each $parcelData[carrier] as item, index}
-          <div
-            class="item {item.selected ? 'selected' : ''}"
-            on:click={selectItem(carrier, index)}>
-            <div class="timeline-component">
-              <div class="dot" />
-            </div>
-            <div class="details">
-              {#if item.location}
-                <p class="place-name">
-                  {item.location.city}{item.location.state ? ", " + item.location.state : ""}
+          {#if drawPoint(item)}
+            <div
+              class="item {item.selected ? 'selected' : ''}"
+              on:click={selectItem(carrier, index)}>
+              <div class="timeline-component">
+                <div class="dot" />
+              </div>
+              <div class="details">
+                {#if item.location}
+                  <p class="place-name">
+                    {locationName(item.location)}
+                  </p>
+                {/if}
+                <p class="status">{item.status}</p>
+                <p class="date">
+                  {moment(item.timestamp).format("dddd, MMMM Do YYYY")}
                 </p>
-              {/if}
-              <p class="status">{item.status}</p>
-              <p class="date">
-                {moment(item.timestamp).format("dddd, MMMM Do YYYY")}
-              </p>
-              <p class="time">{moment(item.timestamp).format("h:mm:ss a")}</p>
+                <p class="time">{moment(item.timestamp).format("h:mm:ss a")}</p>
+              </div>
             </div>
-          </div>
+            {/if}
         {/each}
       </div>
     {/each}

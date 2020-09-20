@@ -6,6 +6,7 @@
   let mapContainer;
   let map;
   let markers = [];
+  let firstLoad = true;
 
   onMount(() => {
     map = new mapbox.Map({
@@ -35,7 +36,6 @@
 
       if (map) {
         if (feature) {
-          console.dir(feature);
           if (feature.bbox) {
             let paddingBottom = (height || 0) + 50;
             try {
@@ -46,6 +46,7 @@
                   right: 50,
                   bottom: paddingBottom,
                 },
+                maxZoom: 12
               });
             } catch (e) {
               map.fitBounds(feature.bbox);
@@ -66,16 +67,40 @@
         Object.keys(data).forEach((carrier) => {
           if (data[carrier].active) {
             const items = data[carrier];
-            for (let item of items) {
+            console.log(items);
+            for (let index = 0; index < items.length; index++) {
+              const item = items[index];
               if (item.feature) {
-                const marker = new mapbox.Marker({
-                  color: item.selected
-                    ? "var(--dark-blue)"
-                    : "var(--medium-blue)",
-                })
-                  .setLngLat(item.feature.center)
-                  .addTo(map);
-                markers.push(marker);
+                if (item.feature.geometry && item.feature.geometry.type === "Point") {
+                  const marker = new mapbox.Marker({
+                    color: item.selected
+                      ? "var(--dark-blue)"
+                      : "var(--medium-blue)",
+                  })
+                    .setLngLat(item.feature.center)
+                    .addTo(map);
+                  markers.push(marker);
+                } else if (item.feature.geometry && item.feature.geometry.type === "LineString") {
+                  const lineId = `line${index}`;
+                  map.addSource(lineId, {
+                    type: "geojson",
+                    data: item.feature
+                  });
+                  map.addLayer({
+                    id: lineId,
+                    type: "line",
+                    source: lineId,
+                    layout: {
+                      "line-join": "round",
+                      "line-cap": "round",
+                    },
+                    paint: {
+                      "line-color": item.selected ? "#2D3352" : "#3A4CA6",
+                      "line-width": 8
+                    }
+                  });
+                } 
+
               }
             }
             const selectedItem = items.find((item) => item.selected);
@@ -85,6 +110,7 @@
               recenterMap({ feature: items.bbox });
             }
           }
+          firstLoad = false;
         });
       } else {
         markers.forEach((marker) => {
@@ -95,6 +121,7 @@
           }
         });
         markers = [];
+        firstLoad = true;
       }
     }
   });

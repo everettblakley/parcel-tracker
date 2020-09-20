@@ -24,11 +24,10 @@
   }
 
   const unsubscribe = parcelData.subscribe((value) => {
-    debugger;
-    console.dir(value);
     if (!value) {
       trackingNumber = "";
       collapsed = true;
+      errorMessage = "";
     }
     data = value;
   });
@@ -44,7 +43,6 @@
     }
     errorMessage = "";
     loading = true;
-    parcelData.update(() => undefined);
     doAPICall()
       .then(async (res) => {
         if (res.status !== 200) {
