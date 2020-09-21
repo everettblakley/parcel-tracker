@@ -9,18 +9,25 @@
   --light: #F2F0EE;
   --dark: #000000;
   --light-grey: #D8DBE8;
-  --red: #E02966;
+  --dark-grey: #333;
+  --red: #e02932;
   --beige: #F4BC66;
+
+  --small: 567px;
+  --medium: 768px;
+  --large: 992px;
 }
 
 * {
   padding: 0;
   margin: 0;
+  box-sizing: border-box;
 }
 
 body {
   width: 100%;
   height: 100vh;
   font-family: 'Roboto', sans-serif;
+  overflow: hidden;
 }
 

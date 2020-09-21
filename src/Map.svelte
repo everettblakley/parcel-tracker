@@ -1,11 +1,10 @@
 <script>
-  import { onDestroy, onMount } from "svelte";
+  import { onMount } from "svelte";
   import { parcelData, menuHeight } from "./stores";
   import { mapbox } from "./mapbox";
 
   let mapContainer;
   let map;
-  let markers = [];
 
   let selectedPoint = [];
   let otherPoints = [];
@@ -23,22 +22,34 @@
     map.on("load", function() {
       map.addSource("selectedPoint", {
         type: "geojson",
-        data: selectedPoint
+        data: {
+          type: "FeatureCollection",
+          features: selectedPoint
+        }
       });
 
       map.addSource("otherPoints", {
         type: "geojson",
-        data: otherPoints
+        data: {
+          type: "FeatureCollection",
+          features: otherPoints
+        }
       });
 
       map.addSource("selectedLine", {
         type: "geojson",
-        data: selectedLine
+        data: {
+          type: "FeatureCollection",
+          features: selectedLine
+        }
       });
 
       map.addSource("otherLines", {
         type: "geojson",
-        data: otherLines
+        data: {
+          type: "FeatureCollection",
+          features: otherLines
+        }
       });
 
       map.addLayer({
