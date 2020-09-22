@@ -2,7 +2,7 @@
   import {slide} from "svelte/transition";
   import { loading, parcelData } from "./stores";
   import { doAPICall } from "./api";
-  import { initializeData } from "./utilities";
+  import { initializeData } from "./utilities/dataUtilities";
 
   let trackingNumber;
   let errorMessage = "";
@@ -17,7 +17,7 @@
     }
     errorMessage = "";
     loading.set(true);
-    doAPICall({trackingNumber, isDev: true})
+    doAPICall({trackingNumber, isDev: false})
       .then(async (res) => {
         if (res.status !== 200) {
           if (res.status === 404) {

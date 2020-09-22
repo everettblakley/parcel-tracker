@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
   import { slide } from "svelte/transition";
-  import { parcelData, menuHeight, loading } from "./stores";
-  import Map from "./Map.svelte";
+  import { parcelData, loading } from "./stores";
+  // import Map from "./Map.svelte";
   import ParcelHistory from "./ParcelHistory.svelte";
   import Form from "./Form.svelte";
   import { onDestroy } from "svelte";
@@ -38,9 +38,9 @@
     collapsed = value == null;
   });
 
-  function collapseChanged(e) {
-    menuHeight.update(() => e.target.clientHeight);
-  }
+  // function collapseChanged(e) {
+  //   menuHeight.update(() => e.target.clientHeight);
+  // }
 
   onDestroy(unsubscribe);
 </script>
@@ -190,7 +190,7 @@
 
     <Form />
 
-    <Map />
+    <!-- <Map /> -->
     <div
       class="collapse-button btn {collapsed ? 'collapsed' : ''}"
       on:click={collapse}>

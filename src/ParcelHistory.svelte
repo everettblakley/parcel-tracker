@@ -1,7 +1,9 @@
-<script>
+<script lang="ts">
   import { slide } from "svelte/transition";
   import moment from "moment";
   import { parcelData } from "./stores";
+  import type { Point, IEntity, ParcelData } from "./types";
+  import { onDestroy } from "svelte";
 
   function selectItem(carrier, index) {
     parcelData.update((oldData) => {
@@ -12,19 +14,17 @@
     });
   }
 
-  function locationName(location) {
-    if (typeof location === "string") {
-      return location;
-    }
-    return `${location.city}${location.state ? ", " + location.state : ""}`;
+  function isPoint(item: IEntity): item is Point {
+    return (item as Point).location !== undefined;
   }
 
-  function drawPoint(item) {
-    if (item.feature) {
-      return item.feature.geometry && item.feature.geometry.type === "Point";
-    }
-    return true;
-  }
+  let data: ParcelData;
+  const unsubscribe = parcelData.subscribe((value) => {
+    data = value as ParcelData;
+  });
+
+  onDestroy(unsubscribe);
+
 </script>
 
 <style>
@@ -136,26 +136,26 @@
 </style>
 
 <div class="container">
-  {#if $parcelData}
-    {#each Object.keys($parcelData) as carrier}
+  {#if data}
+    {#each Object.keys(data) as carrier}
       <h3>Delivered by: { carrier }</h3>
       <div class="items">
-        {#each $parcelData[carrier] as item, index}
-          {#if drawPoint(item)}
+        {#each data[carrier] as item, index (item.index)}
+          {#if isPoint(item)}
             <div
               class="item {item.selected ? 'selected' : ''}"
-              on:click={selectItem(carrier, index)}>
+              on:click={() => selectItem(carrier, index)}>
               <div class="timeline-component">
                 <div class="dot" />
               </div>
               <div class="details">
                 {#if item.location}
                   <p class="place-name">
-                    {locationName(item.location)}
+                    {item.location.toString()}
                   </p>
                 {/if}
-                <p class="status">{item.status}</p>
-                <p class="datetime">{moment(item.timestamp).format("h:mm:ss a")}</p>
+                <!-- <p class="status">{item.status}</p>
+                <p class="datetime">{moment(item.timestamp).format("dddd, MMMM Do YYYY, h:mm:ss a")}</p> -->
               </div>
               <img src="/images/arrow.svg" alt="dropdown arrow">
             </div>
@@ -163,13 +163,13 @@
             {#if item.selected}
               <div class="children" transition:slide>
                 <ul>
-                  <li>Thing 1</li>
-                  <li>Thing 2</li>
-                  <li>Thing 3</li>
+                  {#each item.events as event}
+                  <li>{event.status + " " + event.timestamp}</li>
+                  {/each}
                 </ul>
               </div>
             {/if}
-            {/if}
+          {/if}
         {/each}
       </div>
     {/each}
