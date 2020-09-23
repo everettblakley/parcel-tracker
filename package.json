@@ -4,8 +4,14 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^13.0.0",
     "@rollup/plugin-node-resolve": "^8.1.0",
+    "@rollup/plugin-typescript": "^6.0.0",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@tsconfig/svelte": "^1.0.0",
+    "@types/jest": "^26.0.14",
+    "@types/node": "^14.11.2",
     "eslint": "^7.9.0",
     "eslint-plugin-svelte3": "^2.7.3",
+    "jest": "^26.4.2",
     "npm-run-all": "^4.1.5",
     "rollup": "^2.18.0",
     "rollup-plugin-livereload": "^1.0.0",
@@ -13,11 +19,11 @@
     "rollup-plugin-terser": "^6.1.0",
     "svelte": "^3.0.0",
     "svelte-check": "^1.0.0",
+    "svelte-jester": "^1.1.5",
     "svelte-preprocess": "^4.0.0",
-    "@rollup/plugin-typescript": "^6.0.0",
-    "typescript": "^3.9.3",
+    "ts-jest": "^26.4.0",
     "tslib": "^2.0.0",
-    "@tsconfig/svelte": "^1.0.0"
+    "typescript": "^3.9.3"
   },
   "dependencies": {
     "@mapbox/mapbox-sdk": "^0.11.0",
@@ -36,6 +42,27 @@
     "dev": "run-p start:dev autobuild",
     "start": "sirv public --single",
     "start:dev": "sirv public --single --dev",
-    "validate": "svelte-check"
+    "validate": "svelte-check",
+    "test": "jest src",
+    "test:watch": "npm run test -- --watch"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.svelte$": [
+        "svelte-jester",
+        {
+          "preprocess": true
+        }
+      ],
+      "^.+\\.ts$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "svelte"
+    ],
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-dom/extend-expect"
+    ]
   }
 }
