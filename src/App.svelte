@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { slide } from "svelte/transition";
   import { parcelData, menuHeight, loading } from "./stores";
   import Map from "./Map.svelte";

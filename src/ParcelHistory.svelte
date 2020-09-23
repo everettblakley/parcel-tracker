@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { slide } from "svelte/transition";
   import moment from "moment";
   import { parcelData } from "./stores";
@@ -141,7 +141,7 @@
       <h3>Delivered by: { carrier }</h3>
       <div class="items">
         {#each $parcelData[carrier] as item, index}
-          {#if drawPoint(item)}
+          <!-- {#if drawPoint(item)}
             <div
               class="item {item.selected ? 'selected' : ''}"
               on:click={selectItem(carrier, index)}>
@@ -169,7 +169,7 @@
                 </ul>
               </div>
             {/if}
-            {/if}
+          {/if} -->
         {/each}
       </div>
     {/each}

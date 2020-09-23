@@ -2,7 +2,7 @@
   import {slide} from "svelte/transition";
   import { loading, parcelData } from "./stores";
   import { doAPICall } from "./api";
-  import { initializeData } from "./utilities";
+  import { initializeData } from "./utilities/dataUtilities";
 
   let trackingNumber;
   let errorMessage = "";

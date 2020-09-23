@@ -32,8 +32,6 @@ export const getFeatureForLocation = (geocodingClient: any, location: LocationOr
         response.body.features.length
       ) {
         const feature = response.body.features[0];
-        console.log(feature);
-        console.log(toFeature);
         return feature;
       }
     })
@@ -98,10 +96,11 @@ export const initializeData = async (data): Promise<ParcelData> => {
   const mapboxClient = mapboxSdk({ accessToken: mapbox.accessToken });
   const geocodingClient = geocoding(mapboxClient);
 
-  let parcelData: ParcelData;
+  let parcelData: ParcelData = {};
 
   const keys = Object.keys(data);
   for (let key of keys) {
+    console.log(data[key]);
     parcelData[key] = [];
     for (let index = 0; index < data[key].length; index++) {
       const value = data[key][index];
@@ -128,7 +127,7 @@ export const initializeData = async (data): Promise<ParcelData> => {
 
       point.events.push({
         timestamp: value.timestamp,
-        status: value.timestamp
+        status: value.status
       });
 
       let count = 1;
@@ -147,6 +146,8 @@ export const initializeData = async (data): Promise<ParcelData> => {
         count += 1;
         nextPoint = data[key][index + count];
       }
+
+      parcelData[key].push(point);
     }
 
     // Get all the lines connecting different points

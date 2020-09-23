@@ -6,7 +6,7 @@ export class Location {
   postalCode?: string;
   country?: string;
 
-  constructor(city?: string, state?: string, postalCode?: string, country?: string) {
+  constructor(city?: string, state?: string, country?: string, postalCode?: string) {
     this.city = toSentenceCase(city);
     this.state = state;
     this.postalCode = postalCode;
@@ -14,7 +14,7 @@ export class Location {
   }
 
   toString(): string {
-    return [this.city, this.state, this.country, this.postalCode].join(", ");
+    return [this.city, this.state, this.country, this.postalCode].filter(Boolean).join(", ");
   }
 }
 
