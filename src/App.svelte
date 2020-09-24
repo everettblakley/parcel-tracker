@@ -1,6 +1,6 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
-  import { parcelData, menuHeight, loading } from "./stores";
+  import { parcelData, loading } from "./stores";
   import Map from "./Map.svelte";
   import ParcelHistory from "./ParcelHistory.svelte";
   import Form from "./Form.svelte";
@@ -11,6 +11,7 @@
    * 4010765063638021
    * 392404625680
    * 4337360760364248
+   * 800772325813362256
    */
 
   let collapsed = true;
@@ -38,9 +39,9 @@
     collapsed = value == null;
   });
 
-  function collapseChanged(e) {
-    menuHeight.update(() => e.target.clientHeight);
-  }
+  // function collapseChanged(e) {
+  //   menuHeight.update(() => e.target.clientHeight);
+  // }
 
   onDestroy(unsubscribe);
 </script>

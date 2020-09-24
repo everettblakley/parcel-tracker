@@ -12,7 +12,10 @@
   "compilerOptions": {
     "types": [
       "@types/jest",
-      "node"
+      "node",
+      "svelte"
     ],
+    "resolveJsonModule": true,
+    "sourceMap": true,
   }
 }

@@ -2,7 +2,7 @@
   import {slide} from "svelte/transition";
   import { loading, parcelData } from "./stores";
   import { doAPICall } from "./api";
-  import { initializeData } from "./utilities/dataUtilities";
+  import { transformData } from "./utilities/dataUtilities";
 
   let trackingNumber;
   let errorMessage = "";
@@ -17,7 +17,7 @@
     }
     errorMessage = "";
     loading.set(true);
-    doAPICall({trackingNumber, isDev: true})
+    doAPICall({trackingNumber})
       .then(async (res) => {
         if (res.status !== 200) {
           if (res.status === 404) {
@@ -29,8 +29,8 @@
         }
         try {
           let responseData = await res.json();
-          await initializeData(responseData);
-          data = responseData;
+          data = await transformData(responseData);
+          console.log(data);
           parcelData.set(data);
         } catch (e) {
           errorMessage = "Hmm.. Something went wrong processing the tracking data.. Please try again";

@@ -1,3 +1,4 @@
+import type moment from "moment";
 import { toSentenceCase } from "./utilities/textUtilities";
 
 export class Location {
@@ -18,8 +19,10 @@ export class Location {
   }
 }
 
+export declare type LocationOrString = Location | string;
+
 export interface ITrackingEvent {
-  timestamp: string;
+  timestamp: moment.Moment;
   status: string;
   location?: string | Location;
 }

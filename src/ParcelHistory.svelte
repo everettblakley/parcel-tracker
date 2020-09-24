@@ -1,8 +1,7 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
-  import moment from "moment";
   import { parcelData } from "./stores";
-  import type { Point, IEntity, ParcelData } from "./types";
+  import type { Point, IEntity, ParcelData, ITrackingEvent } from "./types";
   import { onDestroy } from "svelte";
 
   function selectItem(carrier, index) {
@@ -16,6 +15,32 @@
 
   function isPoint(item: IEntity): item is Point {
     return (item as Point).location !== undefined;
+  }
+
+  function isExpandable(item: Point): boolean {
+    return item.events.length > 1;
+  }
+
+  function getTimeframe(events: ITrackingEvent[]): string {
+    let output = "";
+
+    if (events.length > 1) {
+      const firstDate = events[0].timestamp;
+      const lastDate = events[events.length - 1].timestamp;
+      if (firstDate.isSame(lastDate, "day")) {
+        output = firstDate.format("dddd, MMMM Do, YYYY");
+      } else {
+        output = `${firstDate.format("dddd, MMMM Do")} - ${lastDate.format("Do, YYYY")}`
+      }
+    } else {
+      output = events[0].timestamp.format("dddd, MMMM Do, YYYY [at] h:mm a");
+    }
+
+    return output;
+  }
+
+  function eventDate(timestamp: moment.Moment) {
+    return timestamp.format("dddd, MMMM Do, YYYY [at] h:mm a")
   }
 
   let data: ParcelData;
@@ -55,14 +80,19 @@
   
   div.item {
     display: grid;
-    padding: 1rem;
+    padding: 12px 8px;
     grid-template-columns: auto 1fr auto;
+    grid-gap: 8px;
     align-items: center;
     flex: 1 0;
     word-wrap: break-word;
     transition: 300ms ease-in-out;
     color: var(--dark-blue);
     cursor: pointer;
+  }
+
+  div.item:not(:last-child):not(.selected) {
+    margin-bottom: 8px;
   }
 
   div.item:hover,
@@ -72,6 +102,10 @@
 
   div.item.selected .dot {
     transform: scale(1.5);
+  }
+
+  div.item.selected + .children {
+    margin-bottom: 8px;
   }
 
   /* div::-webkit-scrollbar {
@@ -92,25 +126,24 @@
     display: flex;
     flex-direction: column;
     align-items: start;
-    padding: 0 16px;
   }
 
-  p.status {
-    padding: 8px 0;
-    font-size: 14px;
-  }
-
-  p.datetime {
-    font-size: 10px;
+  p.timeframe,
+  li p:last-of-type {
+    font-style: italic;
+    font-size: 12px;
+    color: var(--dark-grey);
+    margin-top: 4px;
   }
 
   .dot {
-    width: 25px;
-    height: 25px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: var(--medium-blue);
-    margin: 25px auto;
+    margin: 12px;
     transition: 200ms ease-in-out;
+    margin-right: 0;
   }
 
   .item img {
@@ -130,6 +163,14 @@
     padding-left: 24px;
   }
 
+  .children li {
+    padding: 8px
+  }
+
+  li p:first-of-type {
+    font-size: 15px;
+  }
+
   li::marker {
     color: var(--medium-blue);
   }
@@ -145,26 +186,29 @@
             <div
               class="item {item.selected ? 'selected' : ''}"
               on:click={() => selectItem(carrier, index)}>
-              <div class="timeline-component">
-                <div class="dot" />
-              </div>
+              <div class="dot"/>
               <div class="details">
-                {#if item.location}
-                  <p class="place-name">
-                    {item.location.toString()}
-                  </p>
-                {/if}
+                <p class="place-name">
+                  {item.location ? item.location.toString() : item.events[0].status}
+                </p>
+                <p class="timeframe">
+                  {getTimeframe(item.events)}
+                </p>
                 <!-- <p class="status">{item.status}</p>
                 <p class="datetime">{moment(item.timestamp).format("dddd, MMMM Do YYYY, h:mm:ss a")}</p> -->
               </div>
-              <img src="/images/arrow.svg" alt="dropdown arrow">
+              {#if isExpandable(item)}
+                <img src="/images/arrow.svg" alt="dropdown arrow">
+              {/if}
             </div>
-
-            {#if item.selected}
+            {#if (item.selected)}
               <div class="children" transition:slide>
                 <ul>
                   {#each item.events as event}
-                  <li>{event.status + " " + event.timestamp}</li>
+                  <li>
+                    <p>{event.status}</p>
+                    <p>{eventDate(event.timestamp)}</p>
+                  </li>
                   {/each}
                 </ul>
               </div>

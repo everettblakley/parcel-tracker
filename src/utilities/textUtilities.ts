@@ -1,5 +1,5 @@
 export const toSentenceCase = (text: string) => {
-  if (!text) return text;
+  if (!text) return "";
   return text.replace(/\w\S*/g, function (text) {
     return text.charAt(0).toUpperCase() + text.substr(1).toLowerCase();
   });

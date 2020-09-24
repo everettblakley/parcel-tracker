@@ -1,6 +1,6 @@
 import * as textUtilites from "../utilities/textUtilities";
 
-describe("To Sentence Case", () => {
+describe("toSentenceCase", () => {
   test("returns empty string for falsy", () => {
     let text = "";
     text = textUtilites.toSentenceCase(text);
