@@ -40,8 +40,10 @@
     "build": "rollup -c",
     "autobuild": "rollup -c -w",
     "dev": "run-p start:dev autobuild",
+    "dev:host": "run-p start:dev:host autobuild",
     "start": "sirv public --single",
     "start:dev": "sirv public --single --dev",
+    "start:dev:host": "sirv public --single --dev --host",
     "validate": "svelte-check",
     "test": "jest src",
     "test:watch": "npm run test -- --watch"

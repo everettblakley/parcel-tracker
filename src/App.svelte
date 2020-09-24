@@ -14,6 +14,7 @@
    * 800772325813362256
    */
 
+  
   let collapsed = true;
   
   let width = 0;
@@ -26,8 +27,17 @@
       showMenu = true;
     }
   }
-
+  
   let src = "/images/arrow.svg";
+
+  // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+  let height = 0;
+  let vh = height * 0.1;
+  document.documentElement.style.setProperty("--vh", `${vh}px`);
+  window.addEventListener("resize", () => {
+    let vh = height * 0.1;
+    document.documentElement.style.setProperty("--vh", `${vh}px`);
+  });
 
   const currentYear = new Date().getFullYear();
 
@@ -46,7 +56,7 @@
   onDestroy(unsubscribe);
 </script>
 
-<svelte:window bind:innerWidth={width} />
+<svelte:window bind:innerWidth={width} bind:innerHeight={height} />
 
 <style>
   .container {
@@ -56,7 +66,15 @@
 
   @media only screen and (max-width: 768px) {
     .container {
-      grid-template-rows: 1fr auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1 0;
+      min-height: 60%;
+      height: 100vh;
+      /* height: calc(var(--vh, 1vh) * 100); */
     }
 
     .menu {
@@ -186,7 +204,7 @@
   <img class="spinner" src="/images/spinner.svg" alt="loading spinner" />
 </div>
 
-<div class="container">
+<div class="container {showMenu ? "" : "collapsed"}">
   <main>
 
     <Form />

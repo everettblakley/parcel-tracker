@@ -18,12 +18,12 @@
   }
 
   function isExpandable(item: Point): boolean {
-    return item.events.length > 1;
+    return item.location !== "";
   }
 
-  function getTimeframe(events: ITrackingEvent[]): string {
+  function getTimeframe(point: Point): string {
     let output = "";
-
+    const events: ITrackingEvent[] = point.events;
     if (events.length > 1) {
       const firstDate = events[0].timestamp;
       const lastDate = events[events.length - 1].timestamp;
@@ -33,7 +33,11 @@
         output = `${firstDate.format("dddd, MMMM Do")} - ${lastDate.format("Do, YYYY")}`
       }
     } else {
-      output = events[0].timestamp.format("dddd, MMMM Do, YYYY [at] h:mm a");
+      if (point.location !== "") {
+        output = events[0].timestamp.format("dddd, MMMM Do, YYYY");
+      } else {
+        output = events[0].timestamp.format("dddd, MMMM Do, YYYY [at] h:mm a");
+      }
     }
 
     return output;
@@ -67,16 +71,6 @@
     flex-direction: column;
     position: relative;
   }
-
-  .items::after {
-    position: absolute;
-    background: var(--medium-blue);
-    width: 2px;
-    content: " ";
-    top: 50px;
-    bottom: 50px;
-    margin-left: 28px;
-  }
   
   div.item {
     display: grid;
@@ -91,13 +85,15 @@
     cursor: pointer;
   }
 
-  div.item:not(:last-child):not(.selected) {
-    margin-bottom: 8px;
+  div.item:not(:first-child) {
+    margin-top: 8px;
   }
 
   div.item:hover,
   div.item.selected {
     background: var(--light);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
   }
 
   div.item.selected .dot {
@@ -192,7 +188,7 @@
                   {item.location ? item.location.toString() : item.events[0].status}
                 </p>
                 <p class="timeframe">
-                  {getTimeframe(item.events)}
+                  {getTimeframe(item)}
                 </p>
                 <!-- <p class="status">{item.status}</p>
                 <p class="datetime">{moment(item.timestamp).format("dddd, MMMM Do YYYY, h:mm:ss a")}</p> -->
@@ -201,7 +197,7 @@
                 <img src="/images/arrow.svg" alt="dropdown arrow">
               {/if}
             </div>
-            {#if (item.selected)}
+            {#if (item.selected && isExpandable(item))}
               <div class="children" transition:slide>
                 <ul>
                   {#each item.events as event}

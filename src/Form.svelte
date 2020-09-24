@@ -10,6 +10,8 @@
   $: error = errorMessage !== "";
   $: pushToTop = data != null;
 
+  let input;
+
   function getData() {
     if (!trackingNumber) {
       errorMessage = "Please enter a tracking number!";
@@ -21,7 +23,7 @@
       .then(async (res) => {
         if (res.status !== 200) {
           if (res.status === 404) {
-            errorMessage = "Couldn't find tracking details for this tracking number. Please ensure it is from one of the supported carriers, listed below";
+            errorMessage = "Couldn't find tracking details for this tracking number. Please ensure it is correct, and that it is from one of the supported carriers";
             return;
           }
           errorMessage = "Hmm.. Something went wrong.. Please try a different tracking number";
@@ -45,16 +47,6 @@
       });
   }
 
-  function handleSubmit() {
-    if ($parcelData == null) {
-      getData();
-    } else {
-      parcelData.set(null);
-      trackingNumber = "";
-      data = null;
-    }
-  }
-
 </script>
 
 <style>
@@ -72,13 +64,41 @@
     padding: 1rem;
     border-radius: 8px;
     max-width: 400px;
+    box-sizing: content-box;
+  }
+
+  @media only screen and (max-width: 768px) {
+    .form-container {
+      max-width: 80%;
+    }
+
+    .form-container form {
+      max-width: 100%;
+    }
+
+    .form-container form div input {
+      font-size: 18px;
+    }
+
+    .form-container form div {
+      grid-template-columns: auto;
+      justify-items: center;
+    }
+
+    .form-container.top form div {
+      grid-template-columns: auto auto;
+    }
+
+    .form-container.top form input {
+      width: inherit;
+    }
   }
 
   .form-container form {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width: max-content;
+    width: 100%;
   }
 
   .form-container.top {
@@ -99,11 +119,13 @@
     display: none;
   }
 
-  form span { 
-    display: grid;
-    grid-template-columns: 4fr 1fr;
-    grid-gap: 8px;
+  form div { 
+    display: flex;
     width: 100%;
+  }
+
+  form div input {
+    margin-right: 8px;
   }
   
   form button:hover {
@@ -136,12 +158,19 @@
   }
 
   form.error label, 
-  form.error input {
+  form.error input,
+  p.error {
     color: var(--red);
   }
 
-  form.error input {
+  form.error input,
+  form.error input:focus {
     border-color: var(--red);
+  }
+
+  form input:focus,
+  form button:focus {
+    outline-style: none;
   }
 
   p.error, p.help {
@@ -158,17 +187,18 @@
     <h1>Parcel Tracker</h1>
     <p class="help" transition:slide>Enter in a tracking number from Canada Post, DHL, FedEx, SkyNet Worldwide, USPS, or UPS, and see the order history plotted on the map!</p>
   </header>
-  <form on:submit|preventDefault={handleSubmit} class={error ? "error" : ""}>
+  <form on:submit|preventDefault={getData} class={error ? "error" : ""}>
     <label for="tracking-number">Tracking Number</label>
-    <span>
+    <div>
       <input
       type="text"
       id="tracking-number"
+      bind:this={input}
       bind:value={trackingNumber} />
-      <button class="btn" on:submit|preventDefault={handleSubmit}>
-        {data == null ? "Submit" : "Clear"}
+      <button class="btn" on:submit|preventDefault={getData}>
+        Submit
       </button>
-    </span>
+    </div>
   </form>
   {#if error}
     <p class="error" transition:slide>
