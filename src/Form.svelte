@@ -61,10 +61,31 @@
     flex-direction: column;
     align-items: center;
     background: var(--light);
-    padding: 1rem;
+    padding: 16px;
     border-radius: 8px;
     max-width: 400px;
     box-sizing: content-box;
+  }
+
+  @media only screen and (max-width: 576px) {
+    header h1 {
+      font-size: 24px;
+    }
+
+    input#tracking-number {
+      padding: 4px;
+      max-width: 75%;
+    }
+
+    form button.btn {
+      margin-left: auto;
+    }
+    
+    form button.btn,
+    input#tracking-number,
+    form label {
+      font-size: 15px;
+    }
   }
 
   @media only screen and (max-width: 768px) {
@@ -76,17 +97,8 @@
       max-width: 100%;
     }
 
-    .form-container form div input {
+    .form-container .form-row input {
       font-size: 18px;
-    }
-
-    .form-container form div {
-      grid-template-columns: auto;
-      justify-items: center;
-    }
-
-    .form-container.top form div {
-      grid-template-columns: auto auto;
     }
 
     .form-container.top form input {
@@ -99,6 +111,7 @@
     flex-direction: column;
     justify-content: center;
     width: 100%;
+    min-width: max-content;
   }
 
   .form-container.top {
@@ -119,29 +132,25 @@
     display: none;
   }
 
-  form div { 
+  .form-row { 
     display: flex;
     width: 100%;
-  }
-
-  form div input {
-    margin-right: 8px;
   }
   
   form button:hover {
     background: var(--dark-blue);
-    border: 1px var(--dark) solid;
     color: var(--light);
   }
   
   form button {
     background: var(--light);
-    border: 1px var(--light) solid;
+    border: none;
     border-radius: 4px;
     padding: 8px;
     cursor: pointer;
     transition: 100ms ease-in-out;
     font-size: 18px;
+    margin-left: 8px;
   }
 
   input {
@@ -183,13 +192,13 @@
 </style>
 
 <div class="form-container {pushToTop ? 'top' : ''}">
-  <header>
+  <header transition:slide>
     <h1>Parcel Tracker</h1>
-    <p class="help" transition:slide>Enter in a tracking number from Canada Post, DHL, FedEx, SkyNet Worldwide, USPS, or UPS, and see the order history plotted on the map!</p>
+    <p class="help">Enter in a tracking number from Canada Post, DHL, FedEx, SkyNet Worldwide, USPS, or UPS, and see the order history plotted on the map!</p>
   </header>
   <form on:submit|preventDefault={getData} class={error ? "error" : ""}>
     <label for="tracking-number">Tracking Number</label>
-    <div>
+    <div class="form-row">
       <input
       type="text"
       id="tracking-number"

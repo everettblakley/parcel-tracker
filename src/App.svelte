@@ -30,14 +30,8 @@
   
   let src = "/images/arrow.svg";
 
-  // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
-  let height = 0;
-  let vh = height * 0.1;
-  document.documentElement.style.setProperty("--vh", `${vh}px`);
-  window.addEventListener("resize", () => {
-    let vh = height * 0.1;
-    document.documentElement.style.setProperty("--vh", `${vh}px`);
-  });
+  let innerHeight = 0;
+  let outerHeight = 0;
 
   const currentYear = new Date().getFullYear();
 
@@ -56,7 +50,7 @@
   onDestroy(unsubscribe);
 </script>
 
-<svelte:window bind:innerWidth={width} bind:innerHeight={height} />
+<svelte:window bind:innerWidth={width} bind:innerHeight={innerHeight} bind:outerHeight={outerHeight}/>
 
 <style>
   .container {
@@ -73,8 +67,6 @@
     main {
       flex: 1 0;
       min-height: 60%;
-      height: 100vh;
-      /* height: calc(var(--vh, 1vh) * 100); */
     }
 
     .menu {
@@ -90,7 +82,7 @@
       grid-template-areas: "menu main";
     }
 
-    .collapse-button {
+    .menu-button {
       visibility: hidden;
     }
 
@@ -121,11 +113,12 @@
   .menu {
     display: grid;
     overflow: hidden;
+    box-shadow: 0px -4px 8px 10px rgba(40, 40, 40, 0.1);
+    z-index: 1;
   }
 
   main {
     position: relative;
-    border-bottom: 2px #1a1a1a solid;
   }
 
   img {
@@ -137,24 +130,16 @@
     border: none;
   }
 
-  .collapse-button {
-    background: white;
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.25rem 0.5rem;
-    border: 2px #1a1a1a solid;
-    border-bottom: none;
-    border-radius: 4px 4px 0 0;
-    z-index: 100;
+  .menu-button {
+    text-align: center;
+    padding: 8px;
   }
 
-  .collapse-button img {
+  .menu-button img {
     transition: 200ms ease-in-out;
   }
 
-  .collapse-button.collapsed img {
+  .menu-button.collapsed img {
     transform: rotate(180deg);
   }
 
@@ -198,6 +183,16 @@
   footer a:hover {
     color: var(--medium-blue);
   }
+
+  div.debug-text {
+    position: absolute;
+    left: 50%;
+    bottom: 100px;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    z-index: 1000;
+  }
 </style>
 
 <div class="loading {$loading ? 'active' : ''}">
@@ -206,36 +201,35 @@
 
 <div class="container {showMenu ? "" : "collapsed"}">
   <main>
-
     <Form />
-
     <Map />
-    <div
-      class="collapse-button btn {collapsed ? 'collapsed' : ''}"
-      on:click={collapse}>
-      <img {src} alt="" />
-    </div>
   </main>
 
-  {#if showMenu === true}
-    <section 
-      class="menu" 
-      transition:slide >
+  <section class="menu">
+  
+    {#if !isMobile}
+    <header>
+      <img class="logo" src="/favicon.png" alt="logo">
+      <h1>Parcel Tracker</h1>
+    </header>
+    {:else}
+      <div class="menu-button btn {collapsed ? 'collapsed' : ''}" on:click={collapse}>
+        <img {src} alt="menu button" />
+      </div>
+    {/if}
 
-      {#if !isMobile}
-        <header>
-          <img class="logo" src="/favicon.png" alt="logo">
-          <h1>Parcel Tracker</h1>
-        </header>
-      {/if}
+    {#if showMenu === true}
+      <span transition:slide>
 
-      <ParcelHistory />
+        <ParcelHistory />
+        
+        <footer> 
+          <small>
+            &copy; Copyright { currentYear }, <a href="https://everettblakley.ca">Everett Blakley</a>
+          </small> 
+        </footer> 
+      </span>
+    {/if}
 
-      <footer> 
-        <small>
-          &copy; Copyright { currentYear }, <a href="https://everettblakley.ca">Everett Blakley</a>
-        </small> 
-      </footer> 
     </section>
-  {/if}
 </div>
