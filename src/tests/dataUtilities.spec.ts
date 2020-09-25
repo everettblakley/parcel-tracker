@@ -2,7 +2,6 @@ jest.mock("mapbox-gl");
 jest.mock("@mapbox/mapbox-sdk");
 jest.mock("@mapbox/mapbox-sdk/services/geocoding");
 
-import type { IEntity } from "../types";
 import * as utils from "../utilities/dataUtilities";
 import * as testData from "./testData.json";
 
@@ -66,19 +65,19 @@ describe("combineLocations", () => {
 
   test("can parse malformed data", async () => {
     const data = testData.data[0]["CANADA_POST"];
-    const parsedData: IEntity[] = await utils.combineLocations(data);
+    const parsedData: any[] = await utils.combineLocations(data);
     expect(parsedData).toHaveLength(4);
   });
 
   test("can parse normal data", async () => {
     const data = testData.data[1]["CANADA_POST"];
-    const parsedData: IEntity[] = await utils.combineLocations(data);
+    const parsedData: any[] = await utils.combineLocations(data);
     expect(parsedData).toHaveLength(6);
   });
 
   test("can parse only one data point", async () => {
     const data = testData.data[2]["FEDEX"];
-    const parsedData: IEntity[] = await utils.combineLocations(data);
+    const parsedData: any[] = await utils.combineLocations(data);
     expect(parsedData).toHaveLength(1);
   });
 

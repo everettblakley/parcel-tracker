@@ -1,9 +1,10 @@
 import { geocoding, mapbox, mapboxSdk } from "../mapbox";
-import type { IEntity, LocationOrString, ParcelData, Point } from "../types";
+import type { LocationOrString, ParcelData, Point, Properties } from "../types";
 import { Location } from "../types";
 import { replaceUnderScores, toSentenceCase } from "./textUtilities";
 import { getFeatureForLocation } from "./geographicUtilities";
 import moment from "moment";
+import type { Feature, Point as GeoJSONPoint } from "@turf/helpers";
 
 export const carrierName = (name: string) => {
   name = replaceUnderScores(name);
@@ -32,9 +33,9 @@ export const lib = {
   init
 };
 
-export const combineLocations = async (input: any): Promise<IEntity[]> => {
+export const combineLocations = async (input: any): Promise<Point[]> => {
   const { geocodingClient } = init();
-  const output: IEntity[] = [];
+  const output: Point[] = [];
 
   let data = [...input];
   data.sort((a, b) => {
@@ -48,7 +49,7 @@ export const combineLocations = async (input: any): Promise<IEntity[]> => {
   while (data.length > 0) {
     const value = data[0];
 
-    let feature: any;
+    let feature: Point;
     let location: Location;
 
     if (value.location) {
@@ -56,16 +57,21 @@ export const combineLocations = async (input: any): Promise<IEntity[]> => {
 
       if (location.city) {
         // Get the Mapbox feature for each location
-        feature = await getFeatureForLocation(geocodingClient, location);
+        const response = await getFeatureForLocation(geocodingClient, location);
+        feature = (response as unknown) as Point;
       }
     }
 
     const point: Point = {
-      location: location?.toString(),
-      selected: false,
-      index: output.length,
-      feature,
-      events: []
+      ...feature,
+      type: feature?.type,
+      id: output.length,
+      properties: {
+        ...feature?.properties,
+        location: location?.toString(),
+        events: [],
+        selected: false
+      },
     }
 
     const locations: Set<LocationOrString> = new Set([location?.toString()]);
@@ -81,7 +87,7 @@ export const combineLocations = async (input: any): Promise<IEntity[]> => {
 
     const removedPoints = data.splice(0, count - 1);
     removedPoints.forEach((event) => {
-      point.events.push({
+      point.properties?.events.push({
         timestamp: moment(event.timestamp),
         status: event.status
       });
@@ -98,7 +104,12 @@ export const transformData = async (data): Promise<ParcelData> => {
   const keys = Object.keys(data);
   for (let key of keys) {
     // console.log(data[key]);
-    parcelData[key] = await combineLocations(data[key]);
+    const features = await combineLocations(data[key]);
+    const newKey = carrierName(key);
+    parcelData[newKey] = {
+      type: "FeatureCollection",
+      features
+    }
 
 
     // Get all the lines connecting different points

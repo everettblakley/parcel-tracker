@@ -1,5 +1,6 @@
 import type moment from "moment";
 import { toSentenceCase } from "./utilities/textUtilities";
+import type { Feature as GeoJSONFeature, FeatureCollection, Properties as GeoJSONProperties, Point as GeoJSONPoint, LineString as GeoJSONLineString } from "@turf/helpers";
 
 export class Location {
   city?: string;
@@ -19,7 +20,7 @@ export class Location {
   }
 }
 
-export declare type LocationOrString = Location | string;
+export type LocationOrString = Location | string;
 
 export interface ITrackingEvent {
   timestamp: moment.Moment;
@@ -27,22 +28,15 @@ export interface ITrackingEvent {
   location?: string | Location;
 }
 
-export interface IEntity {
-  selected: Boolean;
-  feature?: any;
-  index: Number;
+export interface Properties extends GeoJSONProperties {
+  location?: string;
+  events?: ITrackingEvent[];
 }
 
-export interface Point extends IEntity {
-  location: string;
-  events: ITrackingEvent[];
-}
+export type Point = GeoJSONFeature<GeoJSONPoint, Properties>;
 
-export interface Connector extends IEntity {
-  source: string;
-  destination: string;
-}
+export type LineString = GeoJSONFeature<LineString, Properties>;
 
 export interface ParcelData {
-  [key: string]: IEntity[];
+  [key: string]: FeatureCollection<any, Properties>;
 }

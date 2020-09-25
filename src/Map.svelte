@@ -1,17 +1,42 @@
-<script>
-  import { onMount } from "svelte";
+<script lang="ts">
+  import { onDestroy, onMount } from "svelte";
   import { parcelData, menuHeight } from "./stores";
   import { mapbox } from "./mapbox";
+  import type { LineString, ParcelData, Point } from "./types";
+  import type { GeoJSONSource } from "mapbox-gl";
 
   let mapContainer;
-  let map;
+  let map : mapbox.Map;
 
-  let selectedPoint = [];
-  let otherPoints = [];
-  let selectedLine = [];
-  let otherLines = [];
+  interface MapData {
+    id: string;
+    features: any[];
+  }
+
+  let points : MapData = {
+    id: "points",
+    features: []
+  }
+  let selectedLine : MapData = {
+    id: "selectedLine",
+    features: []
+  };
+  let otherLines : MapData = {
+    id: "otherLines",
+    features: []
+  };
+
+  let selectedPointId = null;
+
+  function init() {
+    points.features = [];
+    selectedLine.features = [];
+    otherLines.features = [];
+  }
 
   onMount(() => {
+    init();
+
     map = new mapbox.Map({
       container: mapContainer,
       style: "mapbox://styles/everettblakley/ckf65ncr70a2i19pl8u7wgpi9",
@@ -20,62 +45,54 @@
     });
 
     map.on("load", function() {
-      map.addSource("selectedPoint", {
+      map.addSource(points.id, {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: selectedPoint
+          features: points.features
         }
       });
 
-      map.addSource("otherPoints", {
+      map.addSource(selectedLine.id, {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: otherPoints
+          features: selectedLine.features
         }
       });
 
-      map.addSource("selectedLine", {
+      map.addSource(otherLines.id, {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: selectedLine
-        }
-      });
-
-      map.addSource("otherLines", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: otherLines
+          features: otherLines.features
         }
       });
 
       map.addLayer({
-        id: "selectedPoint",
+        id: points.id,
         type: "circle",
-        source: "selectedPoint",
+        source: points.id,
         paint: {
-          "circle-radius": 36,
-          "circle-color": "#2D3352"
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "selected"], false],
+            18,
+            14
+          ],
+          "circle-color": [
+            "case",
+            ["boolean", ["feature-state", "selected"], false],
+            "#2D3352",
+            "#3A4CA6"
+          ]
         }
       });
 
       map.addLayer({
-        id: "otherPoints",
-        type: "circle",
-        source: "otherPoints",
-        paint: {
-          "circle-radius": 25,
-          "circle-color": "#3A4CA6"
-        }
-      });
-
-      map.addLayer({
-        id: "selectedLine",
+        id: selectedLine.id,
         type: "line",
-        source: "selectedLine",
+        source: selectedLine.id,
         layout: {
           "line-cap": "round",
           "line-join": "round"
@@ -87,9 +104,9 @@
       });
 
       map.addLayer({
-        id: "otherLines",
+        id: otherLines.id,
         type: "line",
-        source: "otherLines",
+        source: otherLines.id,
         layout: {
           "line-cap": "round",
           "line-join": "round"
@@ -98,6 +115,33 @@
           "line-color": "#3A4CA6",
           "line-width": 4
         }
+      });
+
+      map.on("click", points.id, function(e) {
+        if (e.features.length > 0) {
+          console.log(e.features[0]);
+          if (selectedPointId) {
+            map.setFeatureState(
+              { source: points.id, id: selectedPointId },
+              { selected: false }
+            );
+          }
+          selectedPointId = e.features[0].id;
+          map.setFeatureState(
+            { source: points.id, id: selectedPointId },
+            { selected: true }
+          );
+          
+        }
+      });
+
+      map.on('mouseenter', 'points', function () {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+        
+        // Change it back to a pointer when it leaves.
+      map.on('mouseleave', 'points', function () {
+        map.getCanvas().style.cursor = '';
       });
     });
 
@@ -146,70 +190,47 @@
     recenterMap({ height });
   });
 
-  // const unsubscribe = parcelData.subscribe((data) => {
-  //   if (map) {
-  //     if (data) {
-  //       Object.keys(data).forEach((carrier) => {
-  //         if (data[carrier].active) {
-  //           const items = data[carrier];
-  //           console.log(items);
-  //           for (let index = 0; index < items.length; index++) {
-  //             const item = items[index];
-  //             if (item.feature) {
-  //               if (item.feature.geometry && item.feature.geometry.type === "Point") {
-  //                 const marker = new mapbox.Marker({
-  //                   color: item.selected
-  //                     ? "var(--dark-blue)"
-  //                     : "var(--medium-blue)",
-  //                 })
-  //                   .setLngLat(item.feature.center)
-  //                   .addTo(map);
-  //                 markers.push(marker);
-  //               } else if (item.feature.geometry && item.feature.geometry.type === "LineString") {
-  //                 const lineId = `line${index}`;
-  //                 map.addSource(lineId, {
-  //                   type: "geojson",
-  //                   data: item.feature
-  //                 });
-  //                 map.addLayer({
-  //                   id: lineId,
-  //                   type: "line",
-  //                   source: lineId,
-  //                   layout: {
-  //                     "line-join": "round",
-  //                     "line-cap": "round",
-  //                   },
-  //                   paint: {
-  //                     "line-color": item.selected ? "#2D3352" : "#3A4CA6",
-  //                     "line-width": 8
-  //                   }
-  //                 });
-  //               } 
+  const unsubscribe = parcelData.subscribe((data: ParcelData) => {
+    if (map) {
+      if (data) {
+        try {
+          init();
+          Object.keys(data).forEach((carrier) => {
+            if (data[carrier]) {
+              const features = data[carrier].features;
+              features.forEach((feature: Point | LineString) => {
+                if (feature.geometry && feature.geometry.type === "Point") {
+                  let mapboxFeature : any = {...feature};
+                  mapboxFeature.state = {
+                    selected: feature.properties.selected
+                  }
+                  points.features.push(mapboxFeature);
+                }
+              });
+            }
+          });
+          console.log(points.features);
+          (map.getSource(points.id) as GeoJSONSource).setData({
+            type: "FeatureCollection",
+            features: points.features
+          });
+        } catch(e) {
+          console.log(e);
+        }
+      } else {
+        // markers.forEach((marker) => {
+        //   try {
+        //     marker.remove();
+        //   } catch (e) {
+        //     console.log(e);
+        //   }
+        // });
+        // markers = [];
+      }
+    }
+  });
 
-  //             }
-  //           }
-  //           const selectedItem = items.find((item) => item.selected);
-  //           if (selectedItem) {
-  //             recenterMap({ feature: selectedItem.feature });
-  //           } else {
-  //             recenterMap({ feature: items.bbox });
-  //           }
-  //         }
-  //       });
-  //     } else {
-  //       markers.forEach((marker) => {
-  //         try {
-  //           marker.remove();
-  //         } catch (e) {
-  //           console.log(e);
-  //         }
-  //       });
-  //       markers = [];
-  //     }
-  //   }
-  // });
-
-  // onDestroy(unsubscribe);
+  onDestroy(unsubscribe);
 </script>
 
 <style>

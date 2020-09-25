@@ -1,29 +1,25 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
   import { parcelData } from "./stores";
-  import type { Point, IEntity, ParcelData, ITrackingEvent } from "./types";
+  import type { ParcelData, Point, ITrackingEvent } from "./types";
   import { onDestroy } from "svelte";
 
   function selectItem(carrier, index) {
-    parcelData.update((oldData) => {
-      oldData[carrier].forEach((value, i) => {
-        value.selected = i === index ? !value.selected : false;
+    parcelData.update((oldData : ParcelData) => {
+      oldData[carrier].features.forEach((value, i) => {
+        value.properties.selected = i === index ? !value.properties.selected : false;
       });
       return oldData;
     });
   }
 
-  function isPoint(item: IEntity): item is Point {
-    return (item as Point).location !== undefined;
-  }
-
   function isExpandable(item: Point): boolean {
-    return item.location !== "";
+    return item.properties?.location !== "";
   }
 
   function getTimeframe(point: Point): string {
     let output = "";
-    const events: ITrackingEvent[] = point.events;
+    const events: ITrackingEvent[] = point.properties.events;
     if (events.length > 1) {
       const firstDate = events[0].timestamp;
       const lastDate = events[events.length - 1].timestamp;
@@ -33,7 +29,7 @@
         output = `${firstDate.format("dddd, MMMM Do")} - ${lastDate.format("Do, YYYY")}`
       }
     } else {
-      if (point.location !== "") {
+      if (point.properties.location !== "") {
         output = events[0].timestamp.format("dddd, MMMM Do, YYYY");
       } else {
         output = events[0].timestamp.format("dddd, MMMM Do, YYYY [at] h:mm a");
@@ -177,30 +173,30 @@
     {#each Object.keys(data) as carrier}
       <h3>Delivered by: { carrier }</h3>
       <div class="items">
-        {#each data[carrier] as item, index (item.index)}
-          {#if isPoint(item)}
+        {#each data[carrier].features as feature, index (feature.id)}
+          {#if !feature.geometry || feature.geometry.type === "Point"}
             <div
-              class="item {item.selected ? 'selected' : ''}"
+              class="item {feature.properties.selected ? 'selected' : ''}"
               on:click={() => selectItem(carrier, index)}>
               <div class="dot"/>
               <div class="details">
                 <p class="place-name">
-                  {item.location ? item.location.toString() : item.events[0].status}
+                  {feature.properties.location ? feature.properties.location.toString() : feature.properties.events[0].status}
                 </p>
                 <p class="timeframe">
-                  {getTimeframe(item)}
+                  {getTimeframe(feature)}
                 </p>
                 <!-- <p class="status">{item.status}</p>
                 <p class="datetime">{moment(item.timestamp).format("dddd, MMMM Do YYYY, h:mm:ss a")}</p> -->
               </div>
-              {#if isExpandable(item)}
+              {#if isExpandable(feature)}
                 <img src="/images/arrow.svg" alt="dropdown arrow">
               {/if}
             </div>
-            {#if (item.selected && isExpandable(item))}
+            {#if (feature.properties.selected && isExpandable(feature))}
               <div class="children" transition:slide>
                 <ul>
-                  {#each item.events as event}
+                  {#each feature.properties.events as event}
                   <li>
                     <p>{event.status}</p>
                     <p>{eventDate(event.timestamp)}</p>

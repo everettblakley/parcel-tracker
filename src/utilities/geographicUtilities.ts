@@ -1,9 +1,9 @@
 import bbox from "@turf/bbox";
 import bboxPolygon from "@turf/bbox-polygon";
-import { feature as toFeature, featureCollection } from "@turf/helpers";
-import type { LocationOrString, Point } from "../types";
+import { Feature, feature as toFeature, featureCollection, LineString, Point } from "@turf/helpers";
+import type { LocationOrString, Properties } from "../types";
 
-export const getFeatureForLocation = (geocodingClient: any, location: LocationOrString) => {
+export const getFeatureForLocation = async (geocodingClient: any, location: LocationOrString) : Promise<Feature<Point, Properties> | undefined>  => {
   if (!geocodingClient || !location) {
     return new Promise((resolve) => {
       resolve(undefined);
@@ -25,7 +25,7 @@ export const getFeatureForLocation = (geocodingClient: any, location: LocationOr
         response.body.features &&
         response.body.features.length
       ) {
-        const feature = response.body.features[0];
+        const feature = response.body.features[0] as Feature<Point, Properties>;
         return feature;
       }
     })

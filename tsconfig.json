@@ -2,7 +2,6 @@
   "extends": "@tsconfig/svelte/tsconfig.json",
   "include": [
     "src/**/*",
-    "src/tests/*"
   ],
   "exclude": [
     "node_modules/*",
@@ -13,7 +12,8 @@
     "types": [
       "@types/jest",
       "node",
-      "svelte"
+      "svelte",
+      "mapbox__mapbox-sdk"
     ],
     "resolveJsonModule": true,
     "sourceMap": true,

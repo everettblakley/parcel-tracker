@@ -19,7 +19,7 @@
     }
     errorMessage = "";
     loading.set(true);
-    doAPICall({trackingNumber})
+    doAPICall({trackingNumber, isDev: true})
       .then(async (res) => {
         if (res.status !== 200) {
           if (res.status === 404) {
