@@ -1,6 +1,6 @@
 import type moment from "moment";
 import { toSentenceCase } from "./utilities/textUtilities";
-import type { Feature as GeoJSONFeature, FeatureCollection, Properties as GeoJSONProperties, Point as GeoJSONPoint, LineString as GeoJSONLineString } from "@turf/helpers";
+import type { Feature as GeoJSONFeature, FeatureCollection, Properties as GeoJSONProperties, Point as GeoJSONPoint, LineString as GeoJSONLineString, Geometries } from "@turf/helpers";
 
 export class Location {
   city?: string;
@@ -35,8 +35,13 @@ export interface Properties extends GeoJSONProperties {
 
 export type Point = GeoJSONFeature<GeoJSONPoint, Properties>;
 
-export type LineString = GeoJSONFeature<LineString, Properties>;
+export interface LineString extends GeoJSONFeature<GeoJSONLineString, GeoJSONProperties> { };
+
+export interface Feature extends GeoJSONFeature<Geometries, Properties> { };
 
 export interface ParcelData {
-  [key: string]: FeatureCollection<any, Properties>;
+  [key: string]: {
+    featureCollection: FeatureCollection<Geometries, Properties>;
+    bbox?: GeoJSONFeature;
+  }
 }

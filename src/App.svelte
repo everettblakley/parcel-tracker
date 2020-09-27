@@ -1,12 +1,12 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import { slide } from "svelte/transition";
-  import { parcelData, loading } from "./stores";
+  import Form from "./Form.svelte";
   import Map from "./Map.svelte";
   import ParcelHistory from "./ParcelHistory.svelte";
-  import Form from "./Form.svelte";
-  import { onDestroy } from "svelte";
+  import { loading, parcelData } from "./stores";
 
-  /* 
+  /*
    * Tracking Numbers
    * 4010765063638021
    * 392404625680
@@ -14,9 +14,8 @@
    * 800772325813362256
    */
 
-  
   let collapsed = true;
-  
+
   let width = 0;
   let showMenu = false;
   $: isMobile = width < 768;
@@ -27,7 +26,7 @@
       showMenu = true;
     }
   }
-  
+
   let src = "/images/arrow.svg";
 
   let innerHeight = 0;
@@ -39,7 +38,7 @@
     collapsed = !collapsed;
   }
 
-  const unsubscribe = parcelData.subscribe(function(value) {
+  const unsubscribe = parcelData.subscribe(function (value) {
     collapsed = value == null;
   });
 
@@ -49,8 +48,6 @@
 
   onDestroy(unsubscribe);
 </script>
-
-<svelte:window bind:innerWidth={width} bind:innerHeight={innerHeight} bind:outerHeight={outerHeight}/>
 
 <style>
   .container {
@@ -88,7 +85,7 @@
 
     .menu {
       grid-area: menu;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto 1fr;
     }
 
     .menu img.logo {
@@ -115,6 +112,11 @@
     overflow: hidden;
     box-shadow: 0px -4px 8px 10px rgba(40, 40, 40, 0.1);
     z-index: 1;
+  }
+
+  .menu-contents {
+    display: grid;
+    grid-template-rows: 1fr auto;
   }
 
   main {
@@ -195,41 +197,42 @@
   }
 </style>
 
+<svelte:window bind:innerWidth={width} bind:innerHeight bind:outerHeight />
 <div class="loading {$loading ? 'active' : ''}">
   <img class="spinner" src="/images/spinner.svg" alt="loading spinner" />
 </div>
 
-<div class="container {showMenu ? "" : "collapsed"}">
+<div class="container {showMenu ? '' : 'collapsed'}">
   <main>
     <Form />
     <Map />
   </main>
 
   <section class="menu">
-  
     {#if !isMobile}
-    <header>
-      <img class="logo" src="/favicon.png" alt="logo">
-      <h1>Parcel Tracker</h1>
-    </header>
+      <header>
+        <img class="logo" src="/favicon.png" alt="logo" />
+        <h1>Parcel Tracker</h1>
+      </header>
     {:else}
-      <div class="menu-button btn {collapsed ? 'collapsed' : ''}" on:click={collapse}>
+      <div
+        class="menu-button btn {collapsed ? 'collapsed' : ''}"
+        on:click={collapse}>
         <img {src} alt="menu button" />
       </div>
     {/if}
 
     {#if showMenu === true}
-      <span transition:slide>
-
+      <div transition:slide class="menu-contents">
         <ParcelHistory />
-        
-        <footer> 
-          <small>
-            &copy; Copyright { currentYear }, <a href="https://everettblakley.ca">Everett Blakley</a>
-          </small> 
-        </footer> 
-      </span>
-    {/if}
 
-    </section>
+        <footer>
+          <small>
+            &copy; Copyright {currentYear}, <a href="https://everettblakley.ca">Everett
+              Blakley</a>
+          </small>
+        </footer>
+      </div>
+    {/if}
+  </section>
 </div>

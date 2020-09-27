@@ -1,13 +1,13 @@
 <script>
-  import {slide} from "svelte/transition";
-  import { loading, parcelData } from "./stores";
+  import { slide } from "svelte/transition";
   import { doAPICall } from "./api";
+  import { loading, parcelData } from "./stores";
   import { transformData } from "./utilities/dataUtilities";
 
   let trackingNumber;
   let errorMessage = "";
   let data = null;
-  $: error = errorMessage !== "";
+  $: error = errorMessage !== "" ? "error" : "";
   $: pushToTop = data != null;
 
   let input;
@@ -19,34 +19,38 @@
     }
     errorMessage = "";
     loading.set(true);
-    doAPICall({trackingNumber, isDev: true})
+    doAPICall({ trackingNumber, isDev: true })
       .then(async (res) => {
         if (res.status !== 200) {
           if (res.status === 404) {
-            errorMessage = "Couldn't find tracking details for this tracking number. Please ensure it is correct, and that it is from one of the supported carriers";
+            errorMessage =
+              "Couldn't find tracking details for this tracking number. Please ensure it is correct, and that it is from one of the supported carriers";
             return;
           }
-          errorMessage = "Hmm.. Something went wrong.. Please try a different tracking number";
+          errorMessage =
+            "Hmm.. Something went wrong.. Please try a different tracking number";
           return;
         }
         try {
           let responseData = await res.json();
           data = await transformData(responseData);
-          console.log(data);
           parcelData.set(data);
         } catch (e) {
-          errorMessage = "Hmm.. Something went wrong processing the tracking data.. Please try again";
+          errorMessage =
+            "Hmm.. Something went wrong processing the tracking data.. Please try again";
           console.error(e);
         } finally {
           loading.set(false);
         }
       })
-      .catch(() => (errorMessage = "Hmm.. Something went wrong.. Please try again later"))
+      .catch(
+        () =>
+          (errorMessage = "Hmm.. Something went wrong.. Please try again later")
+      )
       .finally(() => {
         loading.set(false);
       });
   }
-
 </script>
 
 <style>
@@ -80,7 +84,7 @@
     form button.btn {
       margin-left: auto;
     }
-    
+
     form button.btn,
     input#tracking-number,
     form label {
@@ -132,16 +136,16 @@
     display: none;
   }
 
-  .form-row { 
+  .form-row {
     display: flex;
     width: 100%;
   }
-  
+
   form button:hover {
     background: var(--dark-blue);
     color: var(--light);
   }
-  
+
   form button {
     background: var(--light);
     border: none;
@@ -166,7 +170,7 @@
     margin-bottom: 4px;
   }
 
-  form.error label, 
+  form.error label,
   form.error input,
   p.error {
     color: var(--red);
@@ -182,7 +186,8 @@
     outline-style: none;
   }
 
-  p.error, p.help {
+  p.error,
+  p.help {
     margin: 8px 0;
   }
 
@@ -194,24 +199,23 @@
 <div class="form-container {pushToTop ? 'top' : ''}">
   <header transition:slide>
     <h1>Parcel Tracker</h1>
-    <p class="help">Enter in a tracking number from Canada Post, DHL, FedEx, SkyNet Worldwide, USPS, or UPS, and see the order history plotted on the map!</p>
+    <p class="help">
+      Enter in a tracking number from Canada Post, DHL, FedEx, SkyNet Worldwide,
+      USPS, or UPS, and see the order history plotted on the map!
+    </p>
   </header>
-  <form on:submit|preventDefault={getData} class={error ? "error" : ""}>
+  <form on:submit|preventDefault={getData} class={error}>
     <label for="tracking-number">Tracking Number</label>
     <div class="form-row">
       <input
-      type="text"
-      id="tracking-number"
-      bind:this={input}
-      bind:value={trackingNumber} />
-      <button class="btn" on:submit|preventDefault={getData}>
-        Submit
-      </button>
+        type="text"
+        id="tracking-number"
+        bind:this={input}
+        bind:value={trackingNumber} />
+      <button class="btn" on:submit|preventDefault={getData}> Submit </button>
     </div>
   </form>
   {#if error}
-    <p class="error" transition:slide>
-      {errorMessage}
-    </p>
+    <p class="error" transition:slide>{errorMessage}</p>
   {/if}
 </div>

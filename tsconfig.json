@@ -12,8 +12,7 @@
     "types": [
       "@types/jest",
       "node",
-      "svelte",
-      "mapbox__mapbox-sdk"
+      "svelte"
     ],
     "resolveJsonModule": true,
     "sourceMap": true,

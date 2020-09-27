@@ -1,29 +1,29 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
-  import { parcelData, menuHeight } from "./stores";
-  import { mapbox } from "./mapbox";
-  import type { LineString, ParcelData, Point } from "./types";
   import type { GeoJSONSource } from "mapbox-gl";
+  import { onDestroy, onMount } from "svelte";
+  import { mapbox } from "./mapbox";
+  import { menuHeight, parcelData } from "./stores";
+  import type { Feature, ParcelData } from "./types";
 
   let mapContainer;
-  let map : mapbox.Map;
+  let map: mapbox.Map;
 
   interface MapData {
     id: string;
     features: any[];
   }
 
-  let points : MapData = {
+  let points: MapData = {
     id: "points",
-    features: []
-  }
-  let selectedLine : MapData = {
-    id: "selectedLine",
-    features: []
+    features: [],
   };
-  let otherLines : MapData = {
+  let selectedLine: MapData = {
+    id: "selectedLine",
+    features: [],
+  };
+  let otherLines: MapData = {
     id: "otherLines",
-    features: []
+    features: [],
   };
 
   let selectedPointId = null;
@@ -44,29 +44,29 @@
       zoom: 1,
     });
 
-    map.on("load", function() {
+    map.on("load", function () {
       map.addSource(points.id, {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: points.features
-        }
+          features: points.features,
+        },
       });
 
       map.addSource(selectedLine.id, {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: selectedLine.features
-        }
+          features: selectedLine.features,
+        },
       });
 
       map.addSource(otherLines.id, {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: otherLines.features
-        }
+          features: otherLines.features,
+        },
       });
 
       map.addLayer({
@@ -78,15 +78,15 @@
             "case",
             ["boolean", ["feature-state", "selected"], false],
             18,
-            14
+            14,
           ],
           "circle-color": [
             "case",
             ["boolean", ["feature-state", "selected"], false],
             "#2D3352",
-            "#3A4CA6"
-          ]
-        }
+            "#3A4CA6",
+          ],
+        },
       });
 
       map.addLayer({
@@ -95,12 +95,12 @@
         source: selectedLine.id,
         layout: {
           "line-cap": "round",
-          "line-join": "round"
+          "line-join": "round",
         },
         paint: {
           "line-color": "#2D3352",
-          "line-width": 6
-        }
+          "line-width": 6,
+        },
       });
 
       map.addLayer({
@@ -109,15 +109,15 @@
         source: otherLines.id,
         layout: {
           "line-cap": "round",
-          "line-join": "round"
+          "line-join": "round",
         },
         paint: {
           "line-color": "#3A4CA6",
-          "line-width": 4
-        }
+          "line-width": 4,
+        },
       });
 
-      map.on("click", points.id, function(e) {
+      map.on("click", points.id, function (e) {
         if (e.features.length > 0) {
           console.log(e.features[0]);
           if (selectedPointId) {
@@ -131,17 +131,16 @@
             { source: points.id, id: selectedPointId },
             { selected: true }
           );
-          
         }
       });
 
-      map.on('mouseenter', 'points', function () {
-        map.getCanvas().style.cursor = 'pointer';
+      map.on("mouseenter", "points", function () {
+        map.getCanvas().style.cursor = "pointer";
       });
-        
-        // Change it back to a pointer when it leaves.
-      map.on('mouseleave', 'points', function () {
-        map.getCanvas().style.cursor = '';
+
+      // Change it back to a pointer when it leaves.
+      map.on("mouseleave", "points", function () {
+        map.getCanvas().style.cursor = "";
       });
     });
 
@@ -175,7 +174,7 @@
                   right: 50,
                   bottom: paddingBottom,
                 },
-                maxZoom: 12
+                maxZoom: 12,
               });
             } catch (e) {
               map.fitBounds(feature.bbox);
@@ -197,13 +196,13 @@
           init();
           Object.keys(data).forEach((carrier) => {
             if (data[carrier]) {
-              const features = data[carrier].features;
-              features.forEach((feature: Point | LineString) => {
+              const features = data[carrier].featureCollection.features;
+              features.forEach((feature: Feature) => {
                 if (feature.geometry && feature.geometry.type === "Point") {
-                  let mapboxFeature : any = {...feature};
+                  let mapboxFeature: any = { ...feature };
                   mapboxFeature.state = {
-                    selected: feature.properties.selected
-                  }
+                    selected: feature.properties.selected,
+                  };
                   points.features.push(mapboxFeature);
                 }
               });
@@ -212,9 +211,9 @@
           console.log(points.features);
           (map.getSource(points.id) as GeoJSONSource).setData({
             type: "FeatureCollection",
-            features: points.features
+            features: points.features,
           });
-        } catch(e) {
+        } catch (e) {
           console.log(e);
         }
       } else {

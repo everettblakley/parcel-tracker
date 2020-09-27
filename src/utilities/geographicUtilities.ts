@@ -1,9 +1,9 @@
 import bbox from "@turf/bbox";
 import bboxPolygon from "@turf/bbox-polygon";
-import { Feature, feature as toFeature, featureCollection, LineString, Point } from "@turf/helpers";
-import type { LocationOrString, Properties } from "../types";
+import { Feature as GeoJSONFeature, featureCollection, lineString } from "@turf/helpers";
+import type { LocationOrString, Properties, Point, LineString, Feature } from "../types";
 
-export const getFeatureForLocation = async (geocodingClient: any, location: LocationOrString) : Promise<Feature<Point, Properties> | undefined>  => {
+export const getFeatureForLocation = async (geocodingClient: any, location: LocationOrString): Promise<GeoJSONFeature<Point, Properties> | undefined> => {
   if (!geocodingClient || !location) {
     return new Promise((resolve) => {
       resolve(undefined);
@@ -25,7 +25,7 @@ export const getFeatureForLocation = async (geocodingClient: any, location: Loca
         response.body.features &&
         response.body.features.length
       ) {
-        const feature = response.body.features[0] as Feature<Point, Properties>;
+        const feature = response.body.features[0] as GeoJSONFeature<Point, Properties>;
         return feature;
       }
     })
@@ -35,39 +35,28 @@ export const getFeatureForLocation = async (geocodingClient: any, location: Loca
     });
 };
 
-export const getBoundingBoxForLocations = (data) => {
-  let features = data
-    .map(({ feature }) => {
-      if (feature) {
-        return toFeature(feature.geometry);
-      }
-    })
-    .filter((i) => i !== undefined);
+export const getBoundingBoxForLocations = (inputFeatures: Feature[]): GeoJSONFeature => {
+  let features = inputFeatures
+    .filter((feature: Feature) => feature.geometry !== undefined);
 
   if (features.length === 1 && features[0].bbox) {
-    return features[0].bbox;
+    return bboxPolygon(features[0].bbox);
   }
-  features = featureCollection(features);
-  const boundingBox = bbox(features);
-  const boundingBoxPolygon = bboxPolygon(boundingBox);
-  return boundingBoxPolygon;
+  const boundingBox = bbox(featureCollection(features));
+  return bboxPolygon(boundingBox);
 };
 
 
-export const getLineBetweenPoints = (points: Point[]) => {
-  const lines = [];
-  // for (let index = 0; index < points.length; index++) {
-  //   const point = points[index];
-  //   if (point.feature && index + 1 < points.length && points[index + 1].feature) {
-  //     const nextPoint = points[index + 1];
-  //     // if (!compareLocations(nextPoint.location, point.location)) {
-  //       const line = lineString([point.feature.center, nextPoint.feature.center]);
-  //       lines.push({
-  //         feature: line,
-  //         selected: false
-  //       });
-  //     // }
-  //   }
-  // }
+export const getLineBetweenPoints = (points: Point[]): LineString[] => {
+  const lines: LineString[] = [];
+  for (let index = 0; index < points.length; index++) {
+    const point = points[index];
+    if (point.geometry?.coordinates && index + 1 < points.length && points[index + 1].geometry?.coordinates) {
+      const nextPoint = points[index + 1];
+      const line = lineString([point.geometry.coordinates, nextPoint.geometry.coordinates]);
+      line.properties.selected = false;
+      lines.push((line as unknown) as LineString);
+    }
+  }
   return lines;
 };

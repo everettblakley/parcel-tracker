@@ -1,10 +1,10 @@
-import { geocoding, mapbox, mapboxSdk } from "../mapbox";
-import type { LocationOrString, ParcelData, Point, Properties } from "../types";
-import { Location } from "../types";
-import { replaceUnderScores, toSentenceCase } from "./textUtilities";
-import { getFeatureForLocation } from "./geographicUtilities";
+import type { FeatureCollection, Geometries, LineString } from "@turf/helpers";
 import moment from "moment";
-import type { Feature, Point as GeoJSONPoint } from "@turf/helpers";
+import { geocoding, mapbox, mapboxSdk } from "../mapbox";
+import type { Feature, LocationOrString, ParcelData, Point, Properties } from "../types";
+import { Location } from "../types";
+import { getBoundingBoxForLocations, getFeatureForLocation, getLineBetweenPoints } from "./geographicUtilities";
+import { replaceUnderScores, toSentenceCase } from "./textUtilities";
 
 export const carrierName = (name: string) => {
   name = replaceUnderScores(name);
@@ -35,7 +35,7 @@ export const lib = {
 
 export const combineLocations = async (input: any): Promise<Point[]> => {
   const { geocodingClient } = init();
-  const output: Point[] = [];
+  let output: Point[] = [];
 
   let data = [...input];
   data.sort((a, b) => {
@@ -103,32 +103,24 @@ export const transformData = async (data): Promise<ParcelData> => {
 
   const keys = Object.keys(data);
   for (let key of keys) {
-    // console.log(data[key]);
-    const features = await combineLocations(data[key]);
+    const pointFeatures = await combineLocations(data[key]);
+    const lineFeatures = getLineBetweenPoints(pointFeatures);
+    const features = [...pointFeatures, ...lineFeatures];
     const newKey = carrierName(key);
-    parcelData[newKey] = {
+    const featureCollection: FeatureCollection<Geometries, Properties> = {
       type: "FeatureCollection",
-      features
-    }
+      features,
+    };
+    parcelData[newKey] = {
+      featureCollection,
+      bbox: getBoundingBoxForLocations(features)
+    };
 
 
     // Get all the lines connecting different points
     // const lines = getLineBetweenPoints(data[key]);
     // data[key].push(...lines);
-
-    // Set the bounding box for the features
-    // data[key].bbox = getBoundingBoxForLocations(data[key]);
-
-    // Sort the data based on the timestamp
-    // data[key] = data[key].sort((a, b) => {
-    //   return a.timestamp < b.timestamp
-    //     ? -1
-    //     : a.timestamp > b.timestamp
-    //       ? 1
-    //       : 0;
-    // });
   }
 
-  // console.log(parcelData);
   return parcelData;
 };
