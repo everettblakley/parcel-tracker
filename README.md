@@ -1,19 +1,7 @@
-# Svelte Example
+# Parcel Tracker
 
-This directory is a brief example of a [Svelte](https://svelte.dev/) app with [Serverless Functions](https://vercel.com/docs/v2/serverless-functions/introduction) that can be deployed with Vercel and zero configuration.
+Visualize the journey your packages have taken to get to your doorstep! 
 
-## Deploy Your Own
+Built using Svelte.js (using Typescript) and MapboxGL, deployed using Vercel, and using the [Package Place API](https://package.place/) for parcel data.
 
-Deploy your own Svelte project, along with Serverless Functions, with Vercel.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=https://github.com/vercel/vercel/tree/master/examples/svelte)
-
-_Live Example: https://svelte.now-examples.now.sh_
-
-### How We Created This Example
-
-To get started with Svelte, along with [Serverless Functions](https://vercel.com/docs/v2/serverless-functions/introduction), deployed with Vercel, you can use [degit](https://github.com/Rich-Harris/degit) to initialize the project:
-
-```shell
-$ npx degit sveltejs/template my-svelte-project
-```
+See it live [here](https://parcel-tracker.vercel.app/)
